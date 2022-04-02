@@ -1,0 +1,719 @@
+version: "3.9"
+services:
+
+######################################################
+#     DATABASES
+#     192.168.4.20-29
+######################################################
+  mariadb:
+    image: linuxserver/mariadb
+    container_name: mariadb
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.20
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/mariadb:/config
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    mem_limit: 500m
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.21
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - ${CONFIG_VOLUMES}/mongo:/data/db
+    profiles:
+      - temp
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  mariadb_photos:
+    image: linuxserver/mariadb
+    container_name: mariadb_photos
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.22
+    #command: mysqld --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_ROOT_PASSWORD=insecure
+      - MYSQL_DATABASE=photoprism
+      - MYSQL_USER=photoprism
+      - MYSQL_PASSWORD=insecure
+    volumes:
+      - ${CONFIG_VOLUMES}/mariadb_photos:/config
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+######################################################
+#     PROXIES
+#     192.168.4.30-39
+######################################################
+
+  traefik:
+    container_name: traefik
+    image: traefik:v2.7
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.30
+    environment:
+      - TZ
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--accesslog=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.defaultRule=Host(`{{ trimSuffix \"-docker\" .Name }}.home`)"
+      - "--entrypoints.web.address=:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.services.traefik.loadbalancer.server.scheme=http"
+
+  letsencrypt:
+    image: linuxserver/swag
+    container_name: letsencrypt
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.31
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - URL=${DOMAIN}
+      - SUBDOMAINS=ombi,files,ha,home,collabora,photoprism # calibre,ombi,grafana,files,bot,collabora
+      - VALIDATION=http
+      - ONLY_SUBDOMAINS=true
+      - EMAIL=${EMAIL}
+    volumes:
+      - ${CONFIG_VOLUMES}/letsencrypt/config:/config
+    #ports:
+    #  - "192.168.4.31:443:443"
+    #  - "192.168.4.31:80:80"
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+######################################################
+#     NON WEB
+#     192.168.4.40-49
+######################################################
+  calibre-backend:
+    image: linuxserver/calibre
+    container_name: calibre-backend
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.40
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/calibre/watch:/watch
+      - ${CONFIG_VOLUMES}/calibre/config:/config
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  diun:
+    image: crazymax/diun:latest
+    container_name: diun
+    command: serve
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.42
+    volumes:
+      - ${CONFIG_VOLUMES}/diun:/data
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      - TZ
+      - "DIUN_WATCH_SCHEDULE=0 6 * * *"
+      - "DIUN_PROVIDERS_DOCKER=true"
+      - DIUN_NOTIF_DISCORD_WEBHOOKURL=${DISCORD_URL}
+      - "DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true"
+    restart: always
+
+######################################################
+#     INTERNAL ACCESS
+#     192.168.4.100
+######################################################
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.100
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/sonarr:/config
+      - ${DOWNLOAD_VOLUMES}/downloads:/downloads2
+      - ${MASS_VOLUMES}/plex:/plex
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.101
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/radarr:/config
+      - ${DOWNLOAD_VOLUMES}/downloads:/downloads2
+      - ${MASS_VOLUMES}/plex:/plex
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+
+  jackett:
+    image: linuxserver/jackett
+    container_name: jackett
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.102
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/jackett/config:/config
+      - ${CONFIG_VOLUMES}/jackett/torrents:/downloads
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.jackett.loadbalancer.server.port=9117"
+
+  # not used anymore, figure out how to get the UPS info from the synology
+  unifi:
+    image: linuxserver/unifi-controller
+    container_name: unifi
+    mem_limit: 1g
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.103
+        aliases:
+          - thanatos
+    environment:
+      - PUID
+      - PGID
+    volumes:
+      - ${CONFIG_VOLUMES}/unifi/config:/config
+    ports:
+      - 3478:3478/udp
+      - 10001:10001/udp
+      - 8080:8080
+      - 8081:8081
+      - 8443:8443
+      - 8843:8843
+      - 8880:8880
+      - 6789:6789
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.unifi.loadbalancer.server.port=8443"
+      - "traefik.http.services.unifi.loadbalancer.server.scheme=https"
+
+  transmission:
+    image: haugene/transmission-openvpn:latest
+    container_name: transmission
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.104
+    cap_add:
+      - net_admin
+    devices:
+      - /dev/net/tun
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - OPENVPN_PROVIDER=custom
+      - OPENVPN_USERNAME=${VPN_USER}
+      - OPENVPN_PASSWORD=${VPN_PASSWORD}
+      - "LOCAL_NETWORK=${SUBNET}.0/24,192.168.1.0/24"
+      - "OPENVPN_OPTS=--inactive 3600 --ping 10 --ping-exit 60"
+      - "TRANSMISSION_DOWNLOAD_QUEUE_ENABLED=30"
+      - "TRANSMISSION_MAX_PEERS_GLOBAL=400"
+      - "TRANSMISSION_SCRAPE_PAUSED_TORRENTS_ENABLED=false"
+    volumes:
+      - ${DOWNLOAD_VOLUMES}/downloads:/data2
+      - ${MASS_VOLUMES}/plex/downloads:/data
+      - ${CONFIG_VOLUMES}/vpn2:/data/transmission-home
+      - ${CONFIG_VOLUMES}/jackett/torrents:/data/watch
+      - ${CONFIG_VOLUMES}/openvpn/ca1375.nordvpn.com.tcp.ovpn:/etc/openvpn/custom/default.ovpn:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+
+  led:
+    image: marshallasch/led-controller
+    container_name: led
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.105
+    environment:
+      - TZ
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.led.loadbalancer.server.port=8080"
+
+  # This is for the catch all for the lab home page
+  heimdall:
+    image: linuxserver/heimdall
+    container_name: heimdall
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.106
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/heimdall:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.heimdall.loadbalancer.server.port=80"
+      - "traefik.http.routers.heimdall.priority=1"
+      - "traefik.http.routers.heimdall.rule=HostRegexp(`{subdomain:[a-z]+}.home`)"
+
+  papermerge:
+    image: linuxserver/papermerge
+    container_name: papermerge
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.107
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/papermerge:/config
+      - ${MASS_VOLUMES}/papermerge:/data
+    restart: unless-stopped
+    labels:
+       - "traefik.enable=true"
+       - "traefik.http.services.papermerge.loadbalancer.server.port=8000"
+
+  paperless:
+    image: linuxserver/paperless-ng
+    container_name: paperless
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.108
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/paperless:/config
+      - ${MASS_VOLUMES}/paperless:/data
+    restart: unless-stopped
+    labels:
+       - "traefik.enable=true"
+       - "traefik.http.services.paperless.loadbalancer.server.port=8000"
+
+  radarr4k:
+    image: linuxserver/radarr
+    container_name: radarr4k
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.109
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/radarr_4k:/config
+      - ${MASS_VOLUMES}/plex:/plex
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.radarr4k.loadbalancer.server.port=7878"
+
+######################################################
+#     EXTERNAL ACCESS
+#     192.168.4.200
+######################################################
+  nextcloud:
+    image: linuxserver/nextcloud
+    container_name: nextcloud
+    depends_on:
+      - mariadb
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.200
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/nextcloud/config:/config
+      - ${MASS_VOLUMES}/nextcloud:/data
+    ports:
+      - 443:443
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=443"
+      - "traefik.http.services.nextcloud.loadbalancer.server.scheme=https"
+
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.201
+        aliases:
+          - zeus
+    environment:
+      - TZ="America/Toronto"
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_UID=${PUID}
+      - PLEX_GID=${PGID}
+      - CHANGE_CONFIG_DIR_OWNERSHIP=false
+    volumes:
+      - ${CONFIG_VOLUMES}/plex/config:/config
+      - ${MASS_VOLUMES}/plex:/data:ro
+      - /dev/shm:/transcode
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  ombi:
+    image: linuxserver/ombi
+    container_name: ombi
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.202
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/ombi:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.ombi.loadbalancer.server.port=3579"
+
+  tautulli:
+    image: tautulli/tautulli
+    container_name: tautulli
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.203
+    environment:
+      - TZ
+      - PGID
+      - PUID
+    volumes:
+      - ${CONFIG_VOLUMES}/tautulli:/config
+      - ${CONFIG_VOLUMES}/plex/config/Library/Application Support/Plex Media Server/Logs:/plex_logs:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.tautulli.loadbalancer.server.port=8181"
+
+  calibre:
+    image: linuxserver/calibre-web
+    container_name: calibre
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.204
+    environment:
+     - PUID
+     - PGID
+     - TZ
+     - DOCKER_MODS=linuxserver/calibre-web:calibre
+    volumes:
+     - ${CONFIG_VOLUMES}/calibre-web/config:/config
+     - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.calibre.loadbalancer.server.port=8083"
+
+  slackbot:
+    image: marshallasch/slack-name-bot
+    container_name: slackbot
+    user: "${PUID}:${PGID}"
+    profiles:
+      - temp
+    depends_on:
+      - mongo
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.205
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - SLACK_ACCESS_TOKEN
+      - SLACK_SIGNING_SECRET
+      - DB_HOST=mongo
+      - DB_USER=slackBot
+      - DB_PASS=slackpass
+      - DATABASE=slack_users
+    volumes:
+      - ${CONFIG_VOLUMES}/slackbot:/usr/src/app/config
+    ports:
+      - 9100:9100
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  photoprism:
+    image: photoprism/photoprism:latest
+    container_name: photoprism
+    profiles:
+      - temp
+    depends_on:
+      - mariadb_photos
+    user: "${PUID}:${PGID}"
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.206
+    ports:
+      - "2342:2342" # HTTP port (host:container)
+    environment:
+      - PHOTOPRISM_ADMIN_PASSWORD=insecure          # PLEASE CHANGE: Your initial admin password (min 4 characters)
+      - PHOTOPRISM_SITE_URL=https://photoprism.${DOMAIN}/  # Public server URL incl http:// or https:// and /path, :port is optional
+      - PHOTOPRISM_ORIGINALS_LIMIT=5000               # File size limit for originals in MB (increase for high-res video)
+      - PHOTOPRISM_HTTP_COMPRESSION=gzip            # Improves transfer speed and bandwidth utilization (none or gzip)
+      - PHOTOPRISM_DEBUG=false                      # Run in debug mode (shows additional log messages)
+      - PHOTOPRISM_PUBLIC=false                     # No authentication required (disables password protection)
+      - PHOTOPRISM_READONLY=false                   # Don't modify originals directory (reduced functionality)
+      - PHOTOPRISM_EXPERIMENTAL=false               # Enables experimental features
+      - PHOTOPRISM_DISABLE_CHOWN=false              # Disables storage permission updates on startup
+      - PHOTOPRISM_DISABLE_WEBDAV=false             # Disables built-in WebDAV server
+      - PHOTOPRISM_DISABLE_SETTINGS=false           # Disables Settings in Web UI
+      - PHOTOPRISM_DISABLE_TENSORFLOW=false         # Disables all features depending on TensorFlow
+      - PHOTOPRISM_DISABLE_FACES=false              # Disables facial recognition
+      - PHOTOPRISM_DISABLE_CLASSIFICATION=false     # Disables image classification
+      - PHOTOPRISM_DARKTABLE_PRESETS=false          # Enables Darktable presets and disables concurrent RAW conversion
+      - PHOTOPRISM_DETECT_NSFW=true                # Flag photos as private that MAY be offensive (requires TensorFlow)
+      - PHOTOPRISM_UPLOAD_NSFW=true                 # Allow uploads that MAY be offensive
+      # PHOTOPRISM_DATABASE_DRIVER: "sqlite"         # SQLite is an embedded database that doesn't require a server
+      - PHOTOPRISM_DATABASE_DRIVER=mysql            # Use MariaDB 10.5+ or MySQL 8+ instead of SQLite for improved performance
+      - PHOTOPRISM_DATABASE_SERVER=mariadb_photos:3306     # MariaDB or MySQL database server (hostname:port)
+      - PHOTOPRISM_DATABASE_NAME=photoprism         # MariaDB or MySQL database schema name
+      - PHOTOPRISM_DATABASE_USER=photoprism         # MariaDB or MySQL database user name
+      - PHOTOPRISM_DATABASE_PASSWORD=insecure       # MariaDB or MySQL database user password
+      - PHOTOPRISM_SITE_TITLE=PhotoPrism
+      - PHOTOPRISM_SITE_CAPTION=Browse Your Life
+      - PHOTOPRISM_SITE_DESCRIPTION=My Amazing photos storage
+      - PHOTOPRISM_SITE_AUTHOR=Marshall
+      ## Set a non-root user, group, or custom umask if your Docker environment doesn't support this natively:
+      # PHOTOPRISM_UID=1027
+      # PHOTOPRISM_GID=100
+      # PHOTOPRISM_UMASK: 0000
+      ## Enable TensorFlow AVX2 support for modern Intel CPUs (requires starting the container as root):
+      # PHOTOPRISM_INIT: "tensorflow-amd64-avx2"
+      ## Hardware video transcoding config (optional):
+      # PHOTOPRISM_FFMPEG_BUFFERS: "64"              # FFmpeg capture buffers (default: 32)
+      # PHOTOPRISM_FFMPEG_BITRATE: "32"              # FFmpeg encoding bitrate limit in Mbit/s (default: 50)
+      # PHOTOPRISM_FFMPEG_ENCODER: "h264_v4l2m2m"    # Use Video4Linux for AVC transcoding (default: libx264)
+      # PHOTOPRISM_FFMPEG_ENCODER: "h264_qsv"        # Use Intel Quick Sync Video for AVC transcoding (default: libx264)
+      # PHOTOPRISM_INIT: "intel-graphics tensorflow-amd64-avx2" # Enable TensorFlow AVX2 & Intel Graphics support
+      - HOME=/photoprism
+    ## Hardware devices for video transcoding and machine learning (optional):
+    # devices:
+    #  - "/dev/video11:/dev/video11" # Video4Linux (h264_v4l2m2m)
+    #  - "/dev/dri/renderD128:/dev/dri/renderD128" # Intel GPU
+    #  - "/dev/dri/card0:/dev/dri/card0"
+    working_dir: "/photoprism"
+    volumes:
+      ## The *originals* folder contains your original photo and video files (- "[host folder]:/photoprism/originals"):
+      - "${MASS_VOLUMES}/photoprism/originals:/photoprism/originals"
+      - "${MASS_VOLUMES}/photoprism/import:/photoprism/import"
+      ## Cache, session, thumbnail, and sidecar files will be created in the *storage* folder (never remove):
+      - "${MASS_VOLUMES}/photoprism/storage:/photoprism/storage"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.photoprism.loadbalancer.server.port=2342"
+
+  collabora:
+    image: collabora/code
+    container_name: collabora
+    user: "${PUID}:${PGID}"
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.207
+    cap_add:
+      - MKNOD
+    environment:
+     # - cert_domain=collabora
+      #- "server_name=collabora.marshallasch.ca"
+      #- "dictionaries=en_GB en_US"
+      - domain=files.${DOMAIN}
+      - username=admin
+      - password=password
+      # - "extra_params=--o:ssl.enable=false"
+    #volumes:
+    #  - ${CONFIG_VOLUMES}/collabora:/usr/src/app/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  heimdall_public:
+    image: linuxserver/heimdall
+    container_name: heimdall_public
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.208
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/heimdall_public:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+
+######################################################
+#       done service list
+#     temporary testing services
+#       192.168.4.150-199
+######################################################
+
+  # this is the pimary DNS server
+  # need to figure out a better secondary for the backup
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.150
+        aliases:
+           - theia
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    cap_add:
+      - CAP_NET_BIND_SERVICE
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      - TZ
+      - WEBPASSWORD=test
+      - ADMIN_EMAIL=${EMAIL}
+      - DNSMASQ_USER=root
+    volumes:
+      - ${CONFIG_VOLUMES}/pihole/config:/etc/pihole
+      - ${CONFIG_VOLUMES}/pihole/dnsmasq:/etc/dnsmasq.d
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.pihole.loadbalancer.server.port=443"
+      - "traefik.http.services.pihole.loadbalancer.server.scheme=https"
+
+  homeassistant:
+    image: linuxserver/homeassistant
+    container_name: homeassistant
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.151
+    environment:
+     - PUID
+     - PGID
+     - TZ
+    volumes:
+     - ${CONFIG_VOLUMES}/homeassistant:/config
+    ports:
+     - 8123:80
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+
+  authelia:
+    image: authelia/authelia:4.33
+    container_name: authelia
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.152
+    environment:
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/authelia:/config
+    ports:
+      - 9091:9091
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+
+######################################################
+#       NETWORK SETUP
+######################################################
+networks:
+  lab_net:
+    driver: macvlan
+#    enable_ipv6: true
+    driver_opts:
+      parent: eth3
+    ipam:
+      driver: default
+      config:
+        - subnet: "${SUBNET}.0/24"
+
+

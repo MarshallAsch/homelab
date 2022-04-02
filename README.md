@@ -45,3 +45,8 @@ While there is a long list of other cool things that I would love to add to this
 - Add other modules that can perform some of the configuration of the host, network, and DNS records that are needed
 - Add automated backups to this project
 - Add modules to configure other machines that I have running (ie the raspberry pi DNS failovers and jump hosts)
+
+
+
+[docker-compose.yml]: docker-compose.yml
+[env.template]: env.template

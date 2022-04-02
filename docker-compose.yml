@@ -161,10 +161,11 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       - TZ
-      - "DIUN_WATCH_SCHEDULE=0 6 * * *"
-      - "DIUN_PROVIDERS_DOCKER=true"
+      - "DIUN_WATCH_SCHEDULE=0 18 * * *"
+      - DIUN_PROVIDERS_DOCKER=true
       - DIUN_NOTIF_DISCORD_WEBHOOKURL=${DISCORD_URL}
-      - "DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true"
+      - DIUN_NOTIF_DISCORD_TEMPLATEBODY=An update is available for the {{ if .Entry.Image.HubLink }}[**{{ .Entry.Image }}**]({{ .Entry.Image.HubLink }}){{ else }}**{{ .Entry.Image }}**{{ end }}  on {{ .Entry.Image.Domain }}.
+      - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
     restart: always
 
 ######################################################

@@ -232,7 +232,7 @@ services:
   unifi:
     image: linuxserver/unifi-controller
     container_name: unifi
-    mem_limit: 1g
+    mem_limit: 2g
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.103

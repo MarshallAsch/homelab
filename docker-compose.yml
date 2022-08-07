@@ -186,7 +186,6 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/sonarr:/config
-      - ${DOWNLOAD_VOLUMES}/downloads:/downloads2
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
     labels:
@@ -205,7 +204,6 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/radarr:/config
-      - ${DOWNLOAD_VOLUMES}/downloads:/downloads2
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
     labels:
@@ -268,8 +266,6 @@ services:
         ipv4_address: ${SUBNET}.104
     cap_add:
       - net_admin
-    devices:
-      - /dev/net/tun
     environment:
       - PUID
       - PGID
@@ -283,7 +279,6 @@ services:
       - "TRANSMISSION_MAX_PEERS_GLOBAL=400"
       - "TRANSMISSION_SCRAPE_PAUSED_TORRENTS_ENABLED=false"
     volumes:
-      - ${DOWNLOAD_VOLUMES}/downloads:/data2
       - ${MASS_VOLUMES}/plex/downloads:/data
       - ${CONFIG_VOLUMES}/vpn2:/data/transmission-home
       - ${CONFIG_VOLUMES}/jackett/torrents:/data/watch
@@ -413,7 +408,7 @@ services:
 
   plex:
     container_name: plex
-    image: plexinc/pms-docker
+    image: plexinc/pms-docker:plexpass
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.201
@@ -425,6 +420,7 @@ services:
       - PLEX_UID=${PUID}
       - PLEX_GID=${PGID}
       - CHANGE_CONFIG_DIR_OWNERSHIP=false
+      - PLEX_UPDATE_CHANNEL=4
     volumes:
       - ${CONFIG_VOLUMES}/plex/config:/config
       - ${MASS_VOLUMES}/plex:/data:ro
@@ -645,10 +641,11 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.150
         aliases:
-           - theia
+           - dns1
     dns:
       - 127.0.0.1
       - 1.1.1.1
+      - 1.0.0.1
     cap_add:
       - CAP_NET_BIND_SERVICE
     ports:
@@ -659,7 +656,7 @@ services:
       - "443:443/tcp"
     environment:
       - TZ
-      - WEBPASSWORD=test
+      - WEBPASSWORD=${DNS_WEB_PASSWORD}
       - ADMIN_EMAIL=${EMAIL}
       - DNSMASQ_USER=root
     volumes:

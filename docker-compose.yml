@@ -589,9 +589,6 @@ services:
   collabora:
     image: collabora/code
     container_name: collabora
-    user: "${PUID}:${PGID}"
-    profiles:
-      - temp
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.207
@@ -600,10 +597,10 @@ services:
     environment:
      # - cert_domain=collabora
       #- "server_name=collabora.marshallasch.ca"
-      #- "dictionaries=en_GB en_US"
+      - "dictionaries=en_GB en_US"
       - domain=files.${DOMAIN}
       - username=admin
-      - password=password
+      - password=${COLLABORA_PASSWORD}
       # - "extra_params=--o:ssl.enable=false"
     #volumes:
     #  - ${CONFIG_VOLUMES}/collabora:/usr/src/app/config

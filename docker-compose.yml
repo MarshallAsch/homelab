@@ -270,7 +270,10 @@ services:
       - PUID
       - PGID
       - TZ
-      - OPENVPN_PROVIDER=custom
+      - OPENVPN_PROVIDER=NORDVPN
+      - NORDVPN_COUNTRY=CA
+      - NORDVPN_CATEGORY=legacy_p2p
+      - NORDVPN_PROTOCOL=tcp
       - OPENVPN_USERNAME=${VPN_USER}
       - OPENVPN_PASSWORD=${VPN_PASSWORD}
       - "LOCAL_NETWORK=${SUBNET}.0/24,192.168.1.0/24"
@@ -282,7 +285,6 @@ services:
       - ${MASS_VOLUMES}/plex/downloads:/data
       - ${CONFIG_VOLUMES}/vpn2:/data/transmission-home
       - ${CONFIG_VOLUMES}/jackett/torrents:/data/watch
-      - ${CONFIG_VOLUMES}/openvpn/ca1375.nordvpn.com.tcp.ovpn:/etc/openvpn/custom/default.ovpn:ro
     restart: unless-stopped
     labels:
       - "traefik.enable=true"

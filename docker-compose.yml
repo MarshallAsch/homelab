@@ -423,6 +423,8 @@ services:
       - PLEX_GID=${PGID}
       - CHANGE_CONFIG_DIR_OWNERSHIP=false
       - PLEX_UPDATE_CHANNEL=4
+    devices:
+      - /dev/dri:/dev/dri
     volumes:
       - ${CONFIG_VOLUMES}/plex/config:/config
       - ${MASS_VOLUMES}/plex:/data:ro

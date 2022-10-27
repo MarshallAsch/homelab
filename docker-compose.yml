@@ -452,6 +452,7 @@ services:
       - /dev/dri:/dev/dri
     volumes:
       - ${CONFIG_VOLUMES}/plex/config:/config
+      - "${MASS_VOLUMES}/plex/extra_data:/config/Library/Application Support/Plex Media Server/Media"
       - ${MASS_VOLUMES}/plex:/data:ro
       - /dev/shm:/transcode
     restart: unless-stopped

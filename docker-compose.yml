@@ -623,15 +623,10 @@ services:
     cap_add:
       - MKNOD
     environment:
-     # - cert_domain=collabora
-      #- "server_name=collabora.marshallasch.ca"
       - "dictionaries=en_GB en_US"
       - domain=files.${DOMAIN}
       - username=admin
       - password=${COLLABORA_PASSWORD}
-      # - "extra_params=--o:ssl.enable=false"
-    #volumes:
-    #  - ${CONFIG_VOLUMES}/collabora:/usr/src/app/config
     restart: unless-stopped
     labels:
       - "traefik.enable=false"

@@ -140,15 +140,12 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,photoprism # calibre,ombi,grafana,files,bot,collabora
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,photoprism
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - EMAIL=${EMAIL}
     volumes:
       - ${CONFIG_VOLUMES}/letsencrypt/config:/config
-    #ports:
-    #  - "192.168.4.31:443:443"
-    #  - "192.168.4.31:80:80"
     restart: unless-stopped
     labels:
       - "traefik.enable=false"

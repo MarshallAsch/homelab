@@ -647,6 +647,22 @@ services:
     labels:
       - "traefik.enable=false"
 
+  botomir:
+    image: marshallasch/botomir
+    container_name: botomir
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.209
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    env_file:
+      - ./botomir.env
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
 
 ######################################################
 #       done service list

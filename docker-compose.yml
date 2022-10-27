@@ -71,6 +71,34 @@ services:
     labels:
       - "traefik.enable=false"
 
+  mongo_botomir:
+    image: mongo:5.0
+    container_name: mongo_botomir
+    profiles:
+      - temp
+    mem_limit: 500m
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.23
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MONGO_INITDB_DATABASE=discordbot
+    volumes:
+      - ${CONFIG_VOLUMES}/mongo_botomir/db:/data/db
+      - ${CONFIG_VOLUMES}/mongo_botomir/mongo_init.js:/docker-entrypoint-initdb.d/init.js
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      timeout: 5s
+      retries: 3
+      interval: 10s
+      start_period: 2s
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
 ######################################################
 #     PROXIES
 #     192.168.4.30-39

@@ -76,13 +76,11 @@ services:
     container_name: mongo_botomir
     profiles:
       - temp
-    mem_limit: 500m
+    #mem_limit: 500m
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.23
     environment:
-      - PUID
-      - PGID
       - TZ
       - MONGO_INITDB_DATABASE=discordbot
     volumes:
@@ -654,8 +652,6 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.209
     environment:
-      - PUID
-      - PGID
       - TZ
     env_file:
       - ./botomir.env

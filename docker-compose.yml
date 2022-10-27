@@ -741,6 +741,18 @@ services:
     labels:
       - "traefik.enable=false"
 
+  printer:
+    image: thyrlian/air-pdf-printer
+    container_name: printer
+    hostname: printer
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.153
+    volumes:
+      -  ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
+      -  ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
 
 ######################################################
 #       NETWORK SETUP

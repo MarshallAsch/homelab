@@ -18,8 +18,6 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/mariadb:/config
-    ports:
-      - 3306:3306
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -66,8 +64,6 @@ services:
       - MYSQL_PASSWORD=insecure
     volumes:
       - ${CONFIG_VOLUMES}/mariadb_photos:/config
-    ports:
-      - 3306:3306
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -93,8 +89,6 @@ services:
       retries: 3
       interval: 10s
       start_period: 2s
-    ports:
-      - 27017:27017
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -439,8 +433,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/nextcloud/config:/config
       - ${MASS_VOLUMES}/nextcloud:/data
-    ports:
-      - 443:443
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -753,8 +745,6 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/authelia:/config
-    ports:
-      - 9091:9091
     restart: unless-stopped
     labels:
       - "traefik.enable=false"

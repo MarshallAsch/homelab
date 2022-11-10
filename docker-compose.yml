@@ -9,8 +9,9 @@ services:
     image: linuxserver/mariadb
     container_name: mariadb
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.20
+      - internal
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.20
     environment:
       - PUID
       - PGID
@@ -106,6 +107,7 @@ services:
     container_name: traefik
     image: traefik:v2.7
     networks:
+      plex_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.30
     environment:
@@ -129,6 +131,7 @@ services:
     image: linuxserver/swag
     container_name: letsencrypt
     networks:
+      plex_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.31
     cap_add:
@@ -201,8 +204,10 @@ services:
     image: linuxserver/sonarr
     container_name: sonarr
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.100
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.100
     environment:
       - PUID
       - PGID
@@ -219,8 +224,10 @@ services:
     image: linuxserver/radarr
     container_name: radarr
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.101
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.101
     environment:
       - PUID
       - PGID
@@ -237,8 +244,10 @@ services:
     image: linuxserver/jackett
     container_name: jackett
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.102
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.102
     environment:
       - PUID
       - PGID
@@ -285,8 +294,10 @@ services:
     image: haugene/transmission-openvpn:latest
     container_name: transmission
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.104
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.104
     cap_add:
       - net_admin
     environment:
@@ -331,8 +342,9 @@ services:
     image: linuxserver/heimdall
     container_name: heimdall
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.106
+      - plex_internal
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.106
     environment:
       - PUID
       - PGID
@@ -390,8 +402,10 @@ services:
     image: linuxserver/radarr
     container_name: radarr4k
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.109
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.109
     environment:
       - PUID
       - PGID
@@ -414,8 +428,10 @@ services:
     depends_on:
       - mariadb
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.200
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.200
     environment:
       - PUID
       - PGID
@@ -435,6 +451,7 @@ services:
     container_name: plex
     image: plexinc/pms-docker:plexpass
     networks:
+      plex_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.201
         aliases:
@@ -461,8 +478,10 @@ services:
     image: linuxserver/ombi
     container_name: ombi
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.202
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.202
     environment:
       - PUID
       - PGID
@@ -478,8 +497,10 @@ services:
     image: tautulli/tautulli
     container_name: tautulli
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.203
+      - plex_internal
+      - egress
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.203
     environment:
       - TZ
       - PGID
@@ -633,8 +654,9 @@ services:
     image: linuxserver/heimdall
     container_name: heimdall_public
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.208
+      - plex_internal
+      # lab_net:
+      #   ipv4_address: ${SUBNET}.208
     environment:
       - PUID
       - PGID
@@ -754,6 +776,11 @@ services:
 #       NETWORK SETUP
 ######################################################
 networks:
+  internal:
+    internal: true
+  plex_internal:
+    internal: true
+  egress: {}
   lab_net:
     driver: macvlan
 #    enable_ipv6: true

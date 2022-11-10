@@ -10,8 +10,6 @@ services:
     container_name: mariadb
     networks:
       - internal
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.20
     environment:
       - PUID
       - PGID
@@ -200,8 +198,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.100
     environment:
       - PUID
       - PGID
@@ -220,8 +216,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.101
     environment:
       - PUID
       - PGID
@@ -240,8 +234,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.102
     environment:
       - PUID
       - PGID
@@ -290,8 +282,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.104
     cap_add:
       - net_admin
     environment:
@@ -337,8 +327,6 @@ services:
     container_name: heimdall
     networks:
       - plex_internal
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.106
     environment:
       - PUID
       - PGID
@@ -398,8 +386,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.109
     environment:
       - PUID
       - PGID
@@ -424,8 +410,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.200
     environment:
       - PUID
       - PGID
@@ -472,8 +456,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.202
     environment:
       - PUID
       - PGID
@@ -491,8 +473,6 @@ services:
     networks:
       - plex_internal
       - egress
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.203
     environment:
       - TZ
       - PGID
@@ -647,8 +627,7 @@ services:
     container_name: heimdall_public
     networks:
       - plex_internal
-      # lab_net:
-      #   ipv4_address: ${SUBNET}.208
+      - egress
     environment:
       - PUID
       - PGID
@@ -739,8 +718,8 @@ services:
     image: authelia/authelia:4.33
     container_name: authelia
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.152
+      - plex_internal
+      - egress
     environment:
       - TZ
     volumes:

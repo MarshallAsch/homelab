@@ -124,6 +124,7 @@ services:
     container_name: letsencrypt
     networks:
       plex_internal: {}
+      ingress: {}
       lab_net:
         ipv4_address: ${SUBNET}.31
     cap_add:
@@ -408,7 +409,8 @@ services:
     depends_on:
       - mariadb
     networks:
-      - plex_internal
+      - internal
+      - ingress
       - egress
     environment:
       - PUID
@@ -748,6 +750,8 @@ networks:
   internal:
     internal: true
   plex_internal:
+    internal: true
+  ingress:
     internal: true
   egress: {}
   lab_net:

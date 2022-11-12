@@ -90,6 +90,15 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
+
+  authelia_redis:
+    image: redis:7.0-alpine
+    networks:
+      - authelia_internal
+    mem_limit: 2g
+    environment:
+      - TZ
+
 ######################################################
 #     PROXIES
 #     192.168.4.30-39
@@ -722,6 +731,7 @@ services:
     networks:
       - plex_internal
       - egress
+      - authelia_internal
     environment:
       - TZ
     volumes:
@@ -750,6 +760,8 @@ networks:
   internal:
     internal: true
   plex_internal:
+    internal: true
+  authelia_internal:
     internal: true
   ingress:
     internal: true

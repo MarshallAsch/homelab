@@ -109,6 +109,7 @@ services:
     image: traefik:v2.7
     networks:
       plex_internal: {}
+      ingress: {}
       lab_net:
         ipv4_address: ${SUBNET}.30
     environment:

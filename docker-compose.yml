@@ -182,14 +182,13 @@ services:
     container_name: diun
     command: serve
     networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.42
+      - egress
     volumes:
       - ${CONFIG_VOLUMES}/diun:/data
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       - TZ
-      - "DIUN_WATCH_SCHEDULE=0 18 * * *"
+      - "DIUN_WATCH_SCHEDULE=0 18 * MON,THU *"
       - DIUN_PROVIDERS_DOCKER=true
       - DIUN_NOTIF_DISCORD_WEBHOOKURL=${DISCORD_URL}
       - DIUN_NOTIF_DISCORD_TEMPLATEBODY=An update is available for the {{ if .Entry.Image.HubLink }}[**{{ .Entry.Image }}**]({{ .Entry.Image.HubLink }}){{ else }}**{{ .Entry.Image }}**{{ end }}  on {{ .Entry.Image.Domain }}.

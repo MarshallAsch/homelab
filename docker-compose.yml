@@ -173,9 +173,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/calibre/watch:/watch
       - ${CONFIG_VOLUMES}/calibre/config:/config
-    ports:
-      - 8080:8080
-      - 8081:8081
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -322,6 +319,8 @@ services:
   led:
     image: marshallasch/led-controller
     container_name: led
+    profiles:
+      - temp
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.105

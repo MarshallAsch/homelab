@@ -1,4 +1,3 @@
-version: "3.9"
 services:
 
 ######################################################
@@ -16,6 +15,23 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/mariadb:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  inventory_db:
+    image: linuxserver/mariadb
+    networks:
+      - road2ir_internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=${INVENTORY_DB}
+      - MYSQL_USER=${INVENTORY_USER}
+      - MYSQL_PASSWORD=${INVENTORY_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/road2ir/db:/config
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -92,7 +108,7 @@ services:
       - "traefik.enable=false"
 
   authelia_redis:
-    image: redis:7.0-alpine
+    image: redis:7.2-alpine
     networks:
       - authelia_internal
     mem_limit: 2g
@@ -106,7 +122,7 @@ services:
 
   traefik:
     container_name: traefik
-    image: traefik:v2.7
+    image: traefik:v2.10
     networks:
       plex_internal: {}
       ingress: {}
@@ -134,6 +150,7 @@ services:
     container_name: letsencrypt
     networks:
       plex_internal: {}
+      road2ir_internal: {}
       ingress: {}
       lab_net:
         ipv4_address: ${SUBNET}.31
@@ -145,6 +162,7 @@ services:
       - TZ
       - URL=${DOMAIN}
       - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,photoprism
+      - EXTRA_DOMAINS=inventory.road2ir.org
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - EMAIL=${EMAIL}
@@ -195,6 +213,30 @@ services:
       - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
     restart: always
 
+  minecraft:
+    image: itzg/minecraft-server:latest
+    container_name: minecraft
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.41
+    ports:
+      - 25565:25565
+    volumes:
+      - ${CONFIG_VOLUMES}/direwolf20_1_19b:/data
+    environment:
+      - TZ
+      - MEMORY=8G
+      - EULA=TRUE
+      - ONLINE_MODE=TRUE
+      - TYPE=FTBA
+      - FTB_MODPACK_ID=101
+      - FTB_MODPACK_VERSION_ID=2342
+      - MOTD="Our amazing house minecraft server"
+      # - OPS="cb983183-3e15-4d0d-b16e-74fe031a0937,20c39344-2548-4ddb-b3a6-3315ee664ee3"
+    restart: always
+
 ######################################################
 #     INTERNAL ACCESS
 #     192.168.4.100
@@ -235,12 +277,81 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
+  lidarr:
+    image: linuxserver/lidarr
+    networks:
+      - plex_internal
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/lidarr:/config
+      - ${MASS_VOLUMES}/plex:/plex
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
+
+
+  unpackerr:
+    image: golift/unpackerr
+    networks:
+      - plex_internal
+    user: ${PUID}:${PGID}
+    environment:
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/unpackerr:/config
+      - ${MASS_VOLUMES}/plex:/plex
+    restart: unless-stopped
+        
+  bazarr:
+    image: linuxserver/bazarr
+    networks:
+      - plex_internal
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/bazarr:/config
+      - ${MASS_VOLUMES}/plex:/plex
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.bazarr.loadbalancer.server.port=8686"
+
+  prowlarr:
+    image: linuxserver/prowlarr
+    networks:
+      plex_internal: {}
+      egress: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.143
+
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/prowlarr:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=9696"
+
   jackett:
     image: linuxserver/jackett
     container_name: jackett
     networks:
-      - plex_internal
-      - egress
+      plex_internal: {}
+      egress: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.144
+
     environment:
       - PUID
       - PGID
@@ -333,7 +444,6 @@ services:
   # This is for the catch all for the lab home page
   heimdall:
     image: linuxserver/heimdall
-    container_name: heimdall
     networks:
       - plex_internal
     environment:
@@ -454,7 +564,7 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/plex/config:/config
       - "${MASS_VOLUMES}/plex/extra_data:/config/Library/Application Support/Plex Media Server/Media"
-      - ${MASS_VOLUMES}/plex:/data:ro
+      - ${MASS_VOLUMES}/plex:/data
       - /dev/shm:/transcode
     restart: unless-stopped
     labels:
@@ -634,7 +744,6 @@ services:
 
   heimdall_public:
     image: linuxserver/heimdall
-    container_name: heimdall_public
     networks:
       - plex_internal
       - egress
@@ -663,6 +772,44 @@ services:
       - "traefik.enable=false"
 
 
+  road2ir_backend:
+    image: road2ir_inventory_backend:latest
+    networks:
+      - egress
+      - road2ir_internal
+    volumes:
+      - ${CONFIG_VOLUMES}/road2ir/backend:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  road2ir_frontend:
+    image: road2ir_inventory_frontend:latest
+    networks:
+      - egress
+      - road2ir_internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+
+  wrapped:
+    image: aunefyren/wrapperr:latest
+    networks:
+      - plex_internal
+      - ingress
+      - egress
+    ports:
+      - 8282:8282
+    environment:
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/wrapperr/:/app/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
+    
 ######################################################
 #       done service list
 #     temporary testing services
@@ -726,7 +873,7 @@ services:
       - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
 
   authelia:
-    image: authelia/authelia:4.33
+    image: authelia/authelia:4.38
     container_name: authelia
     networks:
       - plex_internal
@@ -742,7 +889,6 @@ services:
 
   printer:
     image: thyrlian/air-pdf-printer
-    container_name: printer
     hostname: printer
     profiles:
       - temp
@@ -750,8 +896,51 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.153
     volumes:
-      -  ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
-      -  ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
+      - ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
+      - ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
+
+
+
+  command-bot:
+    image: marshallasch/discord-command-bot:latest
+      #user: "${PUID}:${PGID}"
+    profiles:
+      - temp
+    networks:
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - DISCORD_TOKEN=${COMMAND_DISCORD_TOKEN}
+      - DISCORD_CLIENT_ID=${COMMAND_DISCORD_CLIENT_ID}
+    volumes:
+      - ${CONFIG_VOLUMES}/command-bot:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  handbrake:
+    image: jlesage/handbrake
+    container_name: handbrake
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.154
+    environment:
+     - PUID
+     - PGID
+     - TZ
+     - USER_ID=$PUID
+     - GROUP_ID=$PGID
+    volumes:
+     - ${CONFIG_VOLUMES}/handbrake/config:/config
+     - ${CONFIG_VOLUMES}/handbrake/storage:/storage
+     - ${CONFIG_VOLUMES}/handbrake/output:/output
+    ports:
+     - 5800:5800
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
 
 ######################################################
 #       NETWORK SETUP
@@ -762,6 +951,8 @@ networks:
   plex_internal:
     internal: true
   authelia_internal:
+    internal: true
+  road2ir_internal:
     internal: true
   ingress:
     internal: true

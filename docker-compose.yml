@@ -294,7 +294,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
 
-
   unpackerr:
     image: golift/unpackerr
     networks:
@@ -306,7 +305,7 @@ services:
       - ${CONFIG_VOLUMES}/unpackerr:/config
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
-        
+
   bazarr:
     image: linuxserver/bazarr
     networks:
@@ -771,7 +770,6 @@ services:
     labels:
       - "traefik.enable=false"
 
-
   road2ir_backend:
     image: road2ir_inventory_backend:latest
     networks:
@@ -792,7 +790,6 @@ services:
     labels:
       - "traefik.enable=false"
 
-
   wrapped:
     image: aunefyren/wrapperr:latest
     networks:
@@ -809,7 +806,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
-    
+
 ######################################################
 #       done service list
 #     temporary testing services
@@ -899,8 +896,6 @@ services:
       - ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
       - ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
 
-
-
   command-bot:
     image: marshallasch/discord-command-bot:latest
       #user: "${PUID}:${PGID}"
@@ -966,5 +961,3 @@ networks:
       driver: default
       config:
         - subnet: "${SUBNET}.0/24"
-
-

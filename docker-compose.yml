@@ -116,6 +116,23 @@ services:
     environment:
       - TZ
 
+  unifi-db:
+    image: mongo:7.0.11
+    networks:
+      unifi: {}
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/unifi/db:/data/db
+      - ${CONFIG_VOLUMES}/unifi/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
   openldap:
     image: osixia/openldap:latest
     hostname: ldap.marshallasch.ca
@@ -387,21 +404,27 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.jackett.loadbalancer.server.port=9117"
 
-  # not used anymore, figure out how to get the UPS info from the synology
   unifi:
-    image: linuxserver/unifi-controller
-    container_name: unifi
+    image: linuxserver/unifi-network-application:latest
     mem_limit: 2g
     networks:
+      unifi: {}
       lab_net:
         ipv4_address: ${SUBNET}.103
         aliases:
           - thanatos
+    depends_on:
+      - unifi-db
     environment:
       - PUID
       - PGID
+      - MONGO_USER=unifi
+      - MONGO_PASS=$UNIFI_DB_PASS
+      - MONGO_HOST=unifi-db
+      - MONGO_PORT=27017
+      - MONGO_DBNAME=unifi
     volumes:
-      - ${CONFIG_VOLUMES}/unifi/config:/config
+      - ${CONFIG_VOLUMES}/unifi/new:/config
     ports:
       - 3478:3478/udp
       - 10001:10001/udp
@@ -1012,6 +1035,8 @@ networks:
   road2ir_internal:
     internal: true
   ingress:
+    internal: true
+  unifi:
     internal: true
   egress: {}
   lab_net:

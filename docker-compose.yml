@@ -112,6 +112,7 @@ services:
     networks:
       - authelia_internal
     mem_limit: 2g
+    restart: unless-stopped
     environment:
       - TZ
 

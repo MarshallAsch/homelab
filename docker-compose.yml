@@ -116,6 +116,29 @@ services:
     environment:
       - TZ
 
+  openldap:
+    image: osixia/openldap:latest
+    hostname: ldap.marshallasch.ca
+    volumes:
+      - ${CONFIG_VOLUMES}/ldap/db:/var/lib/ldap
+      - ${CONFIG_VOLUMES}/ldap/conf:/etc/ldap/slapd.d
+    networks:
+      - authelia_internal
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ}
+      LDAP_ORGANISATION: "Marshall Asch Homelab"
+      LDAP_DOMAIN: "marshallasch.ca"
+      LDAP_BASE_DN: "dc=marshallasch,dc=ca"
+      LDAP_OPENLDAP_UID: "${PUID}"
+      LDAP_OPENLDAP_GID: "${PGID}"
+      LDAP_ADMIN_PASSWORD: "${LDAP_ADMIN_PASSWORD}" # password for admin@domain.tld
+      LDAP_CONFIG_PASSWORD: "${LDAP_CONFIG_PASSWORD}" # password for config (not sure what this does)
+      LDAP_TLS_VERIFY_CLIENT: "try"
+      LDAP_READONLY_USER: "false"
+      LDAP_RFC2307BIS_SCHEMA: "true"
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
+
 ######################################################
 #     PROXIES
 #     192.168.4.30-39
@@ -517,6 +540,37 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.radarr4k.loadbalancer.server.port=7878"
 
+  ldap-user-manager:
+    image: wheelybird/ldap-user-manager:latest
+    networks:
+      - authelia_internal
+      - plex_internal
+    restart: unless-stopped
+    depends_on:
+      - openldap
+    environment:
+      TZ: ${TZ}
+      SERVER_HOSTNAME: "home.marshallasch.ca" # url for webui
+      SERVER_PATH: "/ldap"
+      ORGANISATION_NAME: "Marshall Asch Homelab" # Org name
+      LDAP_URI: "ldap://openldap"
+      LDAP_BASE_DN: "dc=marshallasch,dc=ca" # edit domain tld same as above
+      LDAP_ADMINS_GROUP: "admins" # admin group
+      LDAP_ADMIN_BIND_DN: "cn=admin,dc=marshallasch,dc=ca" # edit domain tld
+      LDAP_ADMIN_BIND_PWD: "${LDAP_ADMIN_PASSWORD}" # admin password set above
+      LDAP_USES_NIS_SCHEMA: "false"
+      LDAP_REQUIRE_STARTTLS: "false"
+      EMAIL_DOMAIN: "" # email @this.part.here
+      NO_HTTPS: "true"
+      SMTP_HOSTNAME: "" # email SMTP
+      SMTP_HOST_PORT: 465
+      SMTP_USERNAME: "" # email username (usually your email)
+      SMTP_PASSWORD: "" #email password
+      SMTP_USE_TLS: "true"
+      EMAIL_FROM_ADDRESS: "" # your email address
+      REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
+      USERNAME_FORMAT: "{first_name}{last_name}"
+
 ######################################################
 #     EXTERNAL ACCESS
 #     192.168.4.200
@@ -878,9 +932,12 @@ services:
       - egress
       - authelia_internal
     environment:
-      - TZ
+      TZ: ${TZ}
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
     volumes:
       - ${CONFIG_VOLUMES}/authelia:/config
+    secrets:
+      - ldap_admin_password
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -937,6 +994,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
+
+secrets:
+  ldap_admin_password:
+    environment: "LDAP_ADMIN_PASSWORD"
 
 ######################################################
 #       NETWORK SETUP

@@ -955,7 +955,7 @@ services:
       - egress
       - authelia_internal
     environment:
-      TZ: ${TZ}
+      TZ: "${TZ}"
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
     volumes:
       - ${CONFIG_VOLUMES}/authelia:/config

@@ -38,6 +38,23 @@ services:
     labels:
       - "traefik.enable=false"
 
+  inventory_demo_db:
+    image: linuxserver/mariadb
+    networks:
+      - road2ir_internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=${INVENTORY_DB}
+      - MYSQL_USER=${INVENTORY_USER}
+      - MYSQL_PASSWORD=${INVENTORY_DEMO_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/road2ir_demo/db:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
   mongo:
     image: mongo
     container_name: mongo
@@ -205,7 +222,7 @@ services:
       - TZ
       - URL=${DOMAIN}
       - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,photoprism
-      - EXTRA_DOMAINS=inventory.road2ir.org
+      - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - EMAIL=${EMAIL}
@@ -862,6 +879,26 @@ services:
       - "traefik.enable=false"
 
   road2ir_frontend:
+    image: road2ir_inventory_frontend:latest
+    networks:
+      - egress
+      - road2ir_internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  inventory_demo_backend:
+    image: road2ir_inventory_backend:latest
+    networks:
+      - egress
+      - road2ir_internal
+    volumes:
+      - ${CONFIG_VOLUMES}/road2ir_demo/backend:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  inventory_demo_frontend:
     image: road2ir_inventory_frontend:latest
     networks:
       - egress

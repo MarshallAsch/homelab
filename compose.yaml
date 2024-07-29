@@ -55,6 +55,24 @@ services:
     labels:
       - "traefik.enable=false"
 
+  pigi_db:
+    image: linuxserver/mariadb
+    networks:
+      - pigi_internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=${INVENTORY_DB}
+      - MYSQL_USER=${INVENTORY_USER}
+      - MYSQL_PASSWORD=${PIGI_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/pigi/db:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+
   mongo:
     image: mongo
     container_name: mongo
@@ -222,7 +240,7 @@ services:
       - TZ
       - URL=${DOMAIN}
       - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,photoprism
-      - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org
+      - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - EMAIL=${EMAIL}
@@ -907,6 +925,29 @@ services:
     labels:
       - "traefik.enable=false"
 
+  pigi_backend:
+    image: road2ir_inventory_backend:latest
+    networks:
+      - egress
+      - ingress
+      - pigi_internal
+    volumes:
+      - ${CONFIG_VOLUMES}/pigi/backend:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+  pigi_frontend:
+    image: road2ir_inventory_frontend:latest
+    networks:
+      - egress
+      - ingress
+      - pigi_internal
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"
+
+
   wrapped:
     image: aunefyren/wrapperr:latest
     networks:
@@ -1072,6 +1113,8 @@ networks:
   authelia_internal:
     internal: true
   road2ir_internal:
+    internal: true
+  pigi_internal:
     internal: true
   ingress:
     internal: true

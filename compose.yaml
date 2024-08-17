@@ -72,7 +72,6 @@ services:
     labels:
       - "traefik.enable=false"
 
-
   mongo:
     image: mongo
     container_name: mongo
@@ -523,6 +522,26 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.led.loadbalancer.server.port=8080"
+
+  lubelogger:
+    image: ghcr.io/hargata/lubelogger:latest
+    user: "${PUID}:${PGID}"
+    networks:
+      - plex_internal
+      - internal
+    environment:
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/lubelogger/config:/App/config
+      - ${CONFIG_VOLUMES}/lubelogger/data:/App/data
+      - ${CONFIG_VOLUMES}/lubelogger/documents:/App/wwwroot/documents
+      - ${CONFIG_VOLUMES}/lubelogger/images:/App/wwwroot/images
+      - ${CONFIG_VOLUMES}/lubelogger/log:/App/log
+      - ${CONFIG_VOLUMES}/lubelogger/keys:/root/.aspnet/DataProtection-Keys
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.lubelogger.loadbalancer.server.port=5000"
 
   # This is for the catch all for the lab home page
   heimdall:
@@ -1037,10 +1056,12 @@ services:
     environment:
       TZ: "${TZ}"
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
     volumes:
       - ${CONFIG_VOLUMES}/authelia:/config
     secrets:
       - ldap_admin_password
+      - smtp_password
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -1101,6 +1122,8 @@ services:
 secrets:
   ldap_admin_password:
     environment: "LDAP_ADMIN_PASSWORD"
+  smtp_password:
+    environment: "SMTP_PASSWORD"
 
 ######################################################
 #       NETWORK SETUP

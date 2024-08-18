@@ -243,6 +243,9 @@ services:
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - EMAIL=${EMAIL}
+      - DOCKER_MODS=linuxserver/mods:swag-maxmind
+      - MAXMINDDB_USER_ID
+      - MAXMINDDB_LICENSE_KEY
     volumes:
       - ${CONFIG_VOLUMES}/letsencrypt/config:/config
     restart: unless-stopped

@@ -252,6 +252,19 @@ services:
     labels:
       - "traefik.enable=false"
 
+  ddclient:
+    image: lscr.io/linuxserver/ddclient:latest
+    networks:
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - CLOUDFLARE_DNS_TOKEN
+    volumes:
+      - ${CONFIG_VOLUMES}/ddclient:/config
+    restart: unless-stopped
+
 ######################################################
 #     NON WEB
 #     192.168.4.40-49

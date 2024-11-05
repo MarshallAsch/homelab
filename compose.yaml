@@ -941,7 +941,7 @@ services:
       - "traefik.enable=false"
 
   inventory_demo_backend:
-    image: road2ir_inventory_backend:latest
+    image: road2ir_inventory_backend:demo
     networks:
       - egress
       - road2ir_internal
@@ -952,7 +952,7 @@ services:
       - "traefik.enable=false"
 
   inventory_demo_frontend:
-    image: road2ir_inventory_frontend:latest
+    image: road2ir_inventory_frontend:demo
     networks:
       - egress
       - road2ir_internal
@@ -961,7 +961,7 @@ services:
       - "traefik.enable=false"
 
   pigi_backend:
-    image: road2ir_inventory_backend:latest
+    image: road2ir_inventory_backend:pigi
     networks:
       - egress
       - ingress
@@ -973,7 +973,7 @@ services:
       - "traefik.enable=false"
 
   pigi_frontend:
-    image: road2ir_inventory_frontend:latest
+    image: road2ir_inventory_frontend:pigi
     networks:
       - egress
       - ingress
@@ -1127,6 +1127,7 @@ services:
      - GROUP_ID=$PGID
     volumes:
      - ${CONFIG_VOLUMES}/handbrake/config:/config
+     - ${CONFIG_VOLUMES}/handbrake/watch:/watch
      - ${CONFIG_VOLUMES}/handbrake/storage:/storage
      - ${CONFIG_VOLUMES}/handbrake/output:/output
     ports:

@@ -40,6 +40,8 @@ services:
 
   inventory_demo_db:
     image: linuxserver/mariadb
+    profiles:
+      - road2ir_demo
     networks:
       - road2ir_internal
     environment:
@@ -51,23 +53,6 @@ services:
       - MYSQL_PASSWORD=${INVENTORY_DEMO_PASSWORD}
     volumes:
       - ${CONFIG_VOLUMES}/road2ir_demo/db:/config
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
-
-  pigi_db:
-    image: linuxserver/mariadb
-    networks:
-      - pigi_internal
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - MYSQL_DATABASE=${INVENTORY_DB}
-      - MYSQL_USER=${INVENTORY_USER}
-      - MYSQL_PASSWORD=${PIGI_PASSWORD}
-    volumes:
-      - ${CONFIG_VOLUMES}/pigi/db:/config
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -238,7 +223,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,photoprism
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,books
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -461,6 +446,7 @@ services:
     mem_limit: 2g
     networks:
       unifi: {}
+      authelia_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.103
         aliases:
@@ -655,14 +641,14 @@ services:
       LDAP_ADMIN_BIND_PWD: "${LDAP_ADMIN_PASSWORD}" # admin password set above
       LDAP_USES_NIS_SCHEMA: "false"
       LDAP_REQUIRE_STARTTLS: "false"
-      EMAIL_DOMAIN: "" # email @this.part.here
+      EMAIL_DOMAIN: "marshallasch.ca" # email @this.part.here
       NO_HTTPS: "true"
-      SMTP_HOSTNAME: "" # email SMTP
-      SMTP_HOST_PORT: 465
-      SMTP_USERNAME: "" # email username (usually your email)
-      SMTP_PASSWORD: "" #email password
-      SMTP_USE_TLS: "true"
-      EMAIL_FROM_ADDRESS: "" # your email address
+      SMTP_HOSTNAME: smtp.sendgrid.net
+      SMTP_HOST_PORT: 587
+      SMTP_USERNAME: "apikey" # email username (usually your email)
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_USE_TLS: TRUE
+      EMAIL_FROM_ADDRESS: "no-reply@marshallasch.ca" # your email address
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
       USERNAME_FORMAT: "{first_name}{last_name}"
 
@@ -696,7 +682,8 @@ services:
     container_name: plex
     image: plexinc/pms-docker:plexpass
     networks:
-      plex_internal: {}
+      plex_internal:
+        ipv4_address: "172.22.0.11"
       lab_net:
         ipv4_address: ${SUBNET}.201
         aliases:
@@ -757,16 +744,15 @@ services:
   calibre:
     image: linuxserver/calibre-web
     container_name: calibre
-    profiles:
-      - temp
     networks:
+      - authelia_internal
       - ingress
       - egress
     environment:
      - PUID
      - PGID
      - TZ
-     - DOCKER_MODS=linuxserver/calibre-web:calibre
+     - DOCKER_MODS=linuxserver/mods:universal-calibre
     volumes:
      - ${CONFIG_VOLUMES}/calibre-web/config:/config
      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
@@ -933,6 +919,8 @@ services:
 
   road2ir_frontend:
     image: road2ir_inventory_frontend:latest
+    deploy:
+      replicas: 2
     networks:
       - egress
       - road2ir_internal
@@ -942,6 +930,8 @@ services:
 
   inventory_demo_backend:
     image: road2ir_inventory_backend:demo
+    profiles:
+      - road2ir_demo
     networks:
       - egress
       - road2ir_internal
@@ -953,35 +943,16 @@ services:
 
   inventory_demo_frontend:
     image: road2ir_inventory_frontend:demo
+    profiles:
+      - road2ir_demo
+    deploy:
+      replicas: 2
     networks:
       - egress
       - road2ir_internal
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
-
-  pigi_backend:
-    image: road2ir_inventory_backend:pigi
-    networks:
-      - egress
-      - ingress
-      - pigi_internal
-    volumes:
-      - ${CONFIG_VOLUMES}/pigi/backend:/config
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
-
-  pigi_frontend:
-    image: road2ir_inventory_frontend:pigi
-    networks:
-      - egress
-      - ingress
-      - pigi_internal
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
-
 
   wrapped:
     image: aunefyren/wrapperr:latest
@@ -999,6 +970,21 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
+
+  plexripper:
+    image: plexripper/plexripper:0.26.0
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.155
+    environment:
+     - PUID
+     - PGID
+     - TZ
+    volumes:
+    - ${MASS_VOLUMES}/plex:/plex
+    - ${CONFIG_VOLUMES}/plexripper:/Config
+    ports:
+      - 7000:7000
 
 ######################################################
 #       done service list
@@ -1148,13 +1134,15 @@ secrets:
 networks:
   internal:
     internal: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.22.0.0/16"
   plex_internal:
     internal: true
   authelia_internal:
     internal: true
   road2ir_internal:
-    internal: true
-  pigi_internal:
     internal: true
   ingress:
     internal: true

@@ -347,6 +347,20 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
+  tunarr:
+    image: chrisbenincasa/tunarr:latest-vaapi
+    networks:
+      - plex_internal
+      - egress
+    ports:
+      - ${TUNARR_SERVER_PORT:-8000}:8000
+    environment:
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/tunarr:/config/tunarr
+    devices:
+      - /dev/dri:/dev/dri
+
   lidarr:
     image: linuxserver/lidarr
     networks:
@@ -857,6 +871,32 @@ services:
     labels:
       - "traefik.enable=false"
 
+  peanut:
+    image: brandawg93/peanut:latest
+    restart: unless-stopped
+    networks:
+     - ingress
+     - lab_net
+    volumes:
+      - ${CONFIG_VOLUMES}/peanut:/config
+    environment:
+      - WEB_PORT=8080
+      - BASE_PATH=/peanut
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    networks:
+      - plex_internal
+      - egress
+    volumes:
+      - ${CONFIG_VOLUMES}/homepage:/app/config # Make sure your local config directory exists
+      # - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=home.marshallasch.ca
+      - PUID
+      - PGID
+      - TZ
+
   heimdall_public:
     image: linuxserver/heimdall
     networks:
@@ -949,6 +989,24 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
+
+  rewind:
+    image: ghcr.io/raunot/plex-rewind:latest
+    networks:
+      - plex_internal
+      - ingress
+      - egress
+    environment:
+      - TZ
+      - NEXTAUTH_SECRET=o2R7SgPp3CFpS2RUzljjmKpzntS76AZFooCENkqTlOE=
+      - NEXTAUTH_URL=https://home.marshallasch.ca:8383/rewind
+      - NEXT_PUBLIC_SITE_URL=https://home.marshallasch.ca:8383/rewind
+    volumes:
+      -  ${CONFIG_VOLUMES}/rewind:/app/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.rewind.loadbalancer.server.port=8383"
+    restart: unless-stopped
 
   plexripper:
     image: plexripper/plexripper:0.26.0

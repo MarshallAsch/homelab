@@ -8,7 +8,6 @@ services:
 ######################################################
   mariadb:
     image: linuxserver/mariadb
-    container_name: mariadb
     networks:
       - internal
     environment:
@@ -59,7 +58,6 @@ services:
 
   mongo:
     image: mongo
-    container_name: mongo
     mem_limit: 500m
     networks:
       lab_net:
@@ -82,7 +80,6 @@ services:
 
   mariadb_photos:
     image: linuxserver/mariadb
-    container_name: mariadb_photos
     profiles:
       - temp
     networks:
@@ -105,7 +102,6 @@ services:
 
   mongo_botomir:
     image: mongo:5.0
-    container_name: mongo_botomir
     profiles:
       - temp
     #mem_limit: 500m
@@ -183,7 +179,6 @@ services:
 ######################################################
 
   traefik:
-    container_name: traefik
     image: traefik:v2.10
     networks:
       plex_internal: {}
@@ -209,7 +204,6 @@ services:
 
   letsencrypt:
     image: linuxserver/swag
-    container_name: letsencrypt
     networks:
       plex_internal: {}
       road2ir_internal: {}
@@ -256,7 +250,6 @@ services:
 ######################################################
   calibre-backend:
     image: linuxserver/calibre
-    container_name: calibre-backend
     profiles:
       - temp
     networks:
@@ -275,7 +268,6 @@ services:
 
   diun:
     image: crazymax/diun:latest
-    container_name: diun
     command: serve
     networks:
       - egress
@@ -293,7 +285,6 @@ services:
 
   minecraft:
     image: itzg/minecraft-server:latest
-    container_name: minecraft
     profiles:
       - temp
     networks:
@@ -321,7 +312,6 @@ services:
 ######################################################
   sonarr:
     image: linuxserver/sonarr
-    container_name: sonarr
     networks:
       - plex_internal
       - egress
@@ -339,7 +329,6 @@ services:
 
   radarr:
     image: linuxserver/radarr
-    container_name: radarr
     networks:
       - plex_internal
       - egress
@@ -422,7 +411,6 @@ services:
 
   jackett:
     image: linuxserver/jackett
-    container_name: jackett
     networks:
       plex_internal: {}
       egress: {}
@@ -480,7 +468,6 @@ services:
 
   transmission:
     image: haugene/transmission-openvpn:latest
-    container_name: transmission
     networks:
       - plex_internal
       - egress
@@ -512,7 +499,6 @@ services:
 
   led:
     image: marshallasch/led-controller
-    container_name: led
     profiles:
       - temp
     networks:
@@ -565,7 +551,6 @@ services:
 
   papermerge:
     image: linuxserver/papermerge
-    container_name: papermerge
     profiles:
       - temp
     networks:
@@ -585,7 +570,6 @@ services:
 
   paperless:
     image: linuxserver/paperless-ng
-    container_name: paperless
     profiles:
       - temp
     networks:
@@ -605,7 +589,6 @@ services:
 
   radarr4k:
     image: linuxserver/radarr
-    container_name: radarr4k
     networks:
       - plex_internal
       - egress
@@ -658,7 +641,6 @@ services:
 ######################################################
   nextcloud:
     image: linuxserver/nextcloud
-    container_name: nextcloud
     depends_on:
       - mariadb
     networks:
@@ -679,7 +661,6 @@ services:
       - "traefik.http.services.nextcloud.loadbalancer.server.scheme=https"
 
   plex:
-    container_name: plex
     image: plexinc/pms-docker:plexpass
     networks:
       plex_internal:
@@ -708,7 +689,6 @@ services:
 
   ombi:
     image: linuxserver/ombi
-    container_name: ombi
     networks:
       - plex_internal
       - egress
@@ -725,7 +705,6 @@ services:
 
   tautulli:
     image: tautulli/tautulli
-    container_name: tautulli
     networks:
       - plex_internal
       - egress
@@ -743,7 +722,6 @@ services:
 
   calibre:
     image: linuxserver/calibre-web
-    container_name: calibre
     networks:
       - authelia_internal
       - ingress
@@ -763,7 +741,6 @@ services:
 
   slackbot:
     image: marshallasch/slack-name-bot
-    container_name: slackbot
     user: "${PUID}:${PGID}"
     profiles:
       - temp
@@ -792,7 +769,6 @@ services:
 
   photoprism:
     image: photoprism/photoprism:latest
-    container_name: photoprism
     profiles:
       - temp
     depends_on:
@@ -862,7 +838,6 @@ services:
 
   collabora:
     image: collabora/code
-    container_name: collabora
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.207
@@ -894,7 +869,6 @@ services:
 
   botomir:
     image: marshallasch/botomir
-    container_name: botomir
     networks:
       - ingress
       - egress
@@ -995,7 +969,6 @@ services:
   # this is the pimary DNS server
   # need to figure out a better secondary for the backup
   pihole:
-    container_name: pihole
     image: pihole/pihole:latest
     networks:
       lab_net:
@@ -1030,7 +1003,6 @@ services:
 
   homeassistant:
     image: linuxserver/homeassistant
-    container_name: homeassistant
     networks:
       ingress: {}
       lab_net:
@@ -1049,8 +1021,7 @@ services:
       - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
 
   authelia:
-    image: authelia/authelia:4.38
-    container_name: authelia
+    image: authelia/authelia:4.39
     networks:
       - plex_internal
       - egress
@@ -1101,7 +1072,6 @@ services:
 
   handbrake:
     image: jlesage/handbrake
-    container_name: handbrake
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.154

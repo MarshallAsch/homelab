@@ -157,7 +157,9 @@ services:
       - ${CONFIG_VOLUMES}/ldap/db:/var/lib/ldap
       - ${CONFIG_VOLUMES}/ldap/conf:/etc/ldap/slapd.d
     networks:
-      - authelia_internal
+      authelia_internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.25
     restart: unless-stopped
     environment:
       TZ: ${TZ}
@@ -221,6 +223,7 @@ services:
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
+      - SWAG_AUTORELOAD=true
       - EMAIL=${EMAIL}
       - DOCKER_MODS=linuxserver/mods:swag-maxmind
       - MAXMINDDB_USER_ID
@@ -617,7 +620,8 @@ services:
       SERVER_HOSTNAME: "home.marshallasch.ca" # url for webui
       SERVER_PATH: "/ldap"
       ORGANISATION_NAME: "Marshall Asch Homelab" # Org name
-      LDAP_URI: "ldap://openldap"
+      LDAP_URI: "ldaps://openldap"
+      LDAP_IGNORE_CERT_ERRORS: "true"
       LDAP_BASE_DN: "dc=marshallasch,dc=ca" # edit domain tld same as above
       LDAP_ADMINS_GROUP: "admins" # admin group
       LDAP_ADMIN_BIND_DN: "cn=admin,dc=marshallasch,dc=ca" # edit domain tld
@@ -647,6 +651,7 @@ services:
       - internal
       - ingress
       - egress
+      - authelia_internal
     environment:
       - PUID
       - PGID
@@ -1104,10 +1109,10 @@ secrets:
 networks:
   internal:
     internal: true
-    ipam:
-      driver: default
-      config:
-        - subnet: "172.22.0.0/16"
+    # ipam:
+    #   driver: default
+    #   config:
+    #     - subnet: "172.22.0.0/16"
   plex_internal:
     internal: true
   authelia_internal:

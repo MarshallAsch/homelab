@@ -56,6 +56,21 @@ services:
     labels:
       - "traefik.enable=false"
 
+  immich_db:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
+    networks:
+      - immich_internal
+    environment:
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
+      # DB_STORAGE_TYPE: 'HDD'
+    volumes:
+      - ${CONFIG_VOLUMES}/immich/db:/var/lib/postgresql/data
+    restart: unless-stopped
+
   mongo:
     image: mongo
     mem_limit: 500m
@@ -132,6 +147,14 @@ services:
     restart: unless-stopped
     environment:
       - TZ
+
+  immich_redis:
+    image: docker.io/valkey/valkey:8-bookworm
+    networks:
+      - immich_internal
+    healthcheck:
+      test: redis-cli ping || exit 1
+    restart: unless-stopped
 
   unifi-db:
     image: mongo:7.0.11
@@ -210,6 +233,7 @@ services:
       plex_internal: {}
       road2ir_internal: {}
       ingress: {}
+      immich_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.31
     cap_add:
@@ -219,13 +243,13 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,books
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,books,tunarr,speedtest
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - SWAG_AUTORELOAD=true
       - EMAIL=${EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-maxmind
+      - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_USER_ID
       - MAXMINDDB_LICENSE_KEY
     volumes:
@@ -352,10 +376,9 @@ services:
     networks:
       - plex_internal
       - egress
-    ports:
-      - ${TUNARR_SERVER_PORT:-8000}:8000
     environment:
       - TZ
+      - TUNARR_SERVER_TRUST_PROXY=true
     volumes:
       - ${CONFIG_VOLUMES}/tunarr:/config/tunarr
     devices:
@@ -653,6 +676,66 @@ services:
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
       USERNAME_FORMAT: "{first_name}{last_name}"
 
+  speedtest:
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    restart: unless-stopped
+    networks:
+      - ingress
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - APP_TIMEZONE=${TZ}
+      - APP_KEY=${SPEEDTEST_KEY}
+      - SPEEDTEST_SCHEDULE='6 */6 * * *'
+      - PRUNE_RESULTS_OLDER_THAN=60
+      - DB_CONNECTION=sqlite
+      - APP_URL=https://speedtest.marshallasch.ca
+      - ASSET_URL=https://speedtest.marshallasch.ca
+    volumes:
+      - ${CONFIG_VOLUMES}/speedtest:/config
+
+  immich_server:
+    image: ghcr.io/immich-app/immich-server:release
+    networks:
+      - immich_internal
+    # extends:
+    #   file: hwaccel.transcoding.yml
+    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    volumes:
+      - ${MASS_VOLUMES}/images:/usr/src/app/upload
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ
+      - DB_USERNAME=postgres
+      - POSTGRES_DB=immich
+      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+    depends_on:
+      - immich_redis
+      - immich_db
+    restart: unless-stopped
+    healthcheck:
+      disable: false
+
+  immich-ml:
+    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    networks:
+      - immich_internal
+    # extends: # uncomment this section for hardware acceleration - see https://immich.app/docs/features/ml-hardware-acceleration
+    #   file: hwaccel.ml.yml
+    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
+    volumes:
+      - model-cache:/cache
+    environment:
+      - TZ
+      - DB_USERNAME=postgres
+      - POSTGRES_DB=immich
+      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+    restart: unless-stopped
+    healthcheck:
+      disable: false
+
 ######################################################
 #     EXTERNAL ACCESS
 #     192.168.4.200
@@ -682,12 +765,9 @@ services:
   plex:
     image: plexinc/pms-docker:plexpass
     networks:
-      plex_internal:
-        ipv4_address: "172.22.0.11"
+      plex_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.201
-        aliases:
-          - zeus
     environment:
       - TZ="America/Toronto"
       - PLEX_CLAIM=${PLEX_CLAIM}
@@ -886,6 +966,7 @@ services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     networks:
+      - internal
       - plex_internal
       - egress
     volumes:
@@ -990,24 +1071,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
 
-  rewind:
-    image: ghcr.io/raunot/plex-rewind:latest
-    networks:
-      - plex_internal
-      - ingress
-      - egress
-    environment:
-      - TZ
-      - NEXTAUTH_SECRET=o2R7SgPp3CFpS2RUzljjmKpzntS76AZFooCENkqTlOE=
-      - NEXTAUTH_URL=https://home.marshallasch.ca:8383/rewind
-      - NEXT_PUBLIC_SITE_URL=https://home.marshallasch.ca:8383/rewind
-    volumes:
-      -  ${CONFIG_VOLUMES}/rewind:/app/config
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.rewind.loadbalancer.server.port=8383"
-    restart: unless-stopped
-
   plexripper:
     image: plexripper/plexripper:0.26.0
     networks:
@@ -1034,6 +1097,7 @@ services:
   pihole:
     image: pihole/pihole:latest
     networks:
+      internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.150
         aliases:
@@ -1167,10 +1231,8 @@ secrets:
 networks:
   internal:
     internal: true
-    # ipam:
-    #   driver: default
-    #   config:
-    #     - subnet: "172.22.0.0/16"
+  immich_internal:
+    internal: true
   plex_internal:
     internal: true
   authelia_internal:

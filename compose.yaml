@@ -1225,6 +1225,9 @@ secrets:
   smtp_password:
     environment: "SMTP_PASSWORD"
 
+volumes:
+  model-cache:
+
 ######################################################
 #       NETWORK SETUP
 ######################################################

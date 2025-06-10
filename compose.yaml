@@ -704,9 +704,12 @@ services:
     #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
     volumes:
       - ${MASS_VOLUMES}/images:/usr/src/app/upload
+      - ${MASS_VOLUMES}/nextcloud/marshallasch/files/Pictures:/extras:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
       - TZ
+      - DB_HOSTNAME=immich_db
+      - REDIS_HOSTNAME=immich_redis
       - DB_USERNAME=postgres
       - DB_DATABASE_NAME=immich
       - DB_PASSWORD=${IMMICH_DB_PASSWORD}

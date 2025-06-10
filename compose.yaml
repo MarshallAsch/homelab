@@ -243,7 +243,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,books,tunarr,speedtest
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,books,tunarr,speedtest,images
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -708,8 +708,8 @@ services:
     environment:
       - TZ
       - DB_USERNAME=postgres
-      - POSTGRES_DB=immich
-      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_DATABASE_NAME=immich
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
     depends_on:
       - immich_redis
       - immich_db

@@ -675,6 +675,8 @@ services:
       EMAIL_FROM_ADDRESS: "no-reply@marshallasch.ca" # your email address
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
       USERNAME_FORMAT: "{first_name}{last_name}"
+      ENFORCE_SAFE_SYSTEM_NAMES: "FALSE"
+      LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES: "cn:Display Name,quota_files:Storage quota for Nextcloud,quota_images:Storage quota for immich"
 
   speedtest:
     image: lscr.io/linuxserver/speedtest-tracker:latest
@@ -699,13 +701,15 @@ services:
     image: ghcr.io/immich-app/immich-server:release
     networks:
       - immich_internal
+      - egress
     # extends:
     #   file: hwaccel.transcoding.yml
     #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
     volumes:
       - ${MASS_VOLUMES}/images:/usr/src/app/upload
-      - ${MASS_VOLUMES}/nextcloud/marshallasch/files/Pictures:/extras:ro
       - /etc/localtime:/etc/localtime:ro
+      - ${MASS_VOLUMES}/nextcloud/marshallasch/files/Pictures:/external/marshall:ro
+      - ${MASS_VOLUMES}/nextcloud/murrayasch/files:/external/murray:ro
     environment:
       - TZ
       - DB_HOSTNAME=immich_db
@@ -720,11 +724,12 @@ services:
     healthcheck:
       disable: false
 
-  immich-ml:
+  immich_ml:
     # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
     image: ghcr.io/immich-app/immich-machine-learning:release
     networks:
       - immich_internal
+      - egress
     # extends: # uncomment this section for hardware acceleration - see https://immich.app/docs/features/ml-hardware-acceleration
     #   file: hwaccel.ml.yml
     #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
@@ -732,9 +737,11 @@ services:
       - model-cache:/cache
     environment:
       - TZ
+      - DB_HOSTNAME=immich_db
+      - REDIS_HOSTNAME=immich_redis
       - DB_USERNAME=postgres
-      - POSTGRES_DB=immich
-      - POSTGRES_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_DATABASE_NAME=immich
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
     restart: unless-stopped
     healthcheck:
       disable: false
@@ -958,8 +965,9 @@ services:
     image: brandawg93/peanut:latest
     restart: unless-stopped
     networks:
-     - ingress
-     - lab_net
+      internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.160
     volumes:
       - ${CONFIG_VOLUMES}/peanut:/config
     environment:
@@ -1160,11 +1168,14 @@ services:
       TZ: "${TZ}"
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: '/run/secrets/oidc_hmac'
+      X_AUTHELIA_CONFIG_FILTERS: template
     volumes:
       - ${CONFIG_VOLUMES}/authelia:/config
     secrets:
       - ldap_admin_password
       - smtp_password
+      - oidc_hmac
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -1227,6 +1238,9 @@ secrets:
     environment: "LDAP_ADMIN_PASSWORD"
   smtp_password:
     environment: "SMTP_PASSWORD"
+  oidc_hmac:
+    environment: "AUTHELIA_OIDC_HMAC"
+
 
 volumes:
   model-cache:

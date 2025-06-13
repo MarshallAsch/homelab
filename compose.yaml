@@ -17,8 +17,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/mariadb:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   inventory_db:
     image: linuxserver/mariadb
@@ -34,8 +32,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/road2ir/db:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   inventory_demo_db:
     image: linuxserver/mariadb
@@ -53,8 +49,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/road2ir_demo/db:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   immich_db:
     image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
@@ -90,8 +84,6 @@ services:
     ports:
       - 27017:27017
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   mongo_botomir:
     image: mongo:5.0
@@ -114,8 +106,6 @@ services:
       interval: 10s
       start_period: 2s
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   authelia_redis:
     image: redis:7.2-alpine
@@ -148,8 +138,6 @@ services:
     ports:
       - 27017:27017
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   openldap:
     image: osixia/openldap:latest
@@ -180,31 +168,6 @@ services:
 #     PROXIES
 #     192.168.4.30-39
 ######################################################
-
-  traefik:
-    image: traefik:v2.10
-    networks:
-      plex_internal: {}
-      ingress: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.30
-    environment:
-      - TZ
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--accesslog=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.defaultRule=Host(`{{ trimSuffix \"-docker\" .Name }}.home`)"
-      - "--entrypoints.web.address=:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.http.services.traefik.loadbalancer.server.scheme=http"
-
   letsencrypt:
     image: linuxserver/swag
     networks:
@@ -233,8 +196,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/letsencrypt/config:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   ddclient:
     image: lscr.io/linuxserver/ddclient:latest
@@ -268,8 +229,6 @@ services:
       - ${CONFIG_VOLUMES}/calibre/watch:/watch
       - ${CONFIG_VOLUMES}/calibre/config:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   diun:
     image: crazymax/diun:latest
@@ -328,9 +287,6 @@ services:
       - ${CONFIG_VOLUMES}/sonarr:/config
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
   radarr:
     image: linuxserver/radarr
@@ -345,9 +301,6 @@ services:
       - ${CONFIG_VOLUMES}/radarr:/config
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
   tunarr:
     image: chrisbenincasa/tunarr:latest-vaapi
@@ -375,9 +328,6 @@ services:
       - ${CONFIG_VOLUMES}/lidarr:/config
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
 
   unpackerr:
     image: golift/unpackerr
@@ -404,9 +354,6 @@ services:
       - ${CONFIG_VOLUMES}/bazarr:/config
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.bazarr.loadbalancer.server.port=8686"
 
   prowlarr:
     image: linuxserver/prowlarr
@@ -420,9 +367,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/prowlarr:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=9696"
 
   unifi:
     image: linuxserver/unifi-network-application:latest
@@ -456,10 +400,6 @@ services:
       - 8880:8880
       - 6789:6789
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.unifi.loadbalancer.server.port=8443"
-      - "traefik.http.services.unifi.loadbalancer.server.scheme=https"
 
   transmission:
     image: haugene/transmission-openvpn:latest
@@ -488,9 +428,6 @@ services:
       - ${CONFIG_VOLUMES}/vpn2:/data/transmission-home
       - ${CONFIG_VOLUMES}/jackett/torrents:/data/watch
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
 
   led:
     image: marshallasch/led-controller
@@ -502,9 +439,6 @@ services:
     environment:
       - TZ
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.led.loadbalancer.server.port=8080"
 
   lubelogger:
     image: ghcr.io/hargata/lubelogger:latest
@@ -522,9 +456,6 @@ services:
       - ${CONFIG_VOLUMES}/lubelogger/log:/App/log
       - ${CONFIG_VOLUMES}/lubelogger/keys:/root/.aspnet/DataProtection-Keys
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.lubelogger.loadbalancer.server.port=5000"
 
   paperless:
     image: linuxserver/paperless-ng
@@ -541,9 +472,6 @@ services:
       - ${CONFIG_VOLUMES}/paperless:/config
       - ${MASS_VOLUMES}/paperless:/data
     restart: unless-stopped
-    labels:
-       - "traefik.enable=true"
-       - "traefik.http.services.paperless.loadbalancer.server.port=8000"
 
   radarr4k:
     image: linuxserver/radarr
@@ -558,9 +486,6 @@ services:
       - ${CONFIG_VOLUMES}/radarr_4k:/config
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.radarr4k.loadbalancer.server.port=7878"
 
   ldap-user-manager:
     image: wheelybird/ldap-user-manager:latest
@@ -685,10 +610,6 @@ services:
       - ${CONFIG_VOLUMES}/nextcloud/config:/config
       - ${MASS_VOLUMES}/nextcloud:/data
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.nextcloud.loadbalancer.server.port=443"
-      - "traefik.http.services.nextcloud.loadbalancer.server.scheme=https"
 
   plex:
     image: plexinc/pms-docker:plexpass
@@ -711,8 +632,6 @@ services:
       - ${MASS_VOLUMES}/plex:/data
       - /dev/shm:/transcode
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   ombi:
     image: linuxserver/ombi
@@ -726,9 +645,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/ombi:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.ombi.loadbalancer.server.port=3579"
 
   tautulli:
     image: tautulli/tautulli
@@ -743,9 +659,6 @@ services:
       - ${CONFIG_VOLUMES}/tautulli:/config
       - ${CONFIG_VOLUMES}/plex/config/Library/Application Support/Plex Media Server/Logs:/plex_logs:ro
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.tautulli.loadbalancer.server.port=8181"
 
   calibre:
     image: linuxserver/calibre-web
@@ -762,9 +675,6 @@ services:
      - ${CONFIG_VOLUMES}/calibre-web/config:/config
      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.calibre.loadbalancer.server.port=8083"
 
   slackbot:
     image: marshallasch/slack-name-bot
@@ -791,8 +701,6 @@ services:
     ports:
       - 9100:9100
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   collabora:
     image: collabora/code
@@ -806,9 +714,8 @@ services:
       - domain=files.${DOMAIN}
       - username=admin
       - password=${COLLABORA_PASSWORD}
+
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   peanut:
     image: brandawg93/peanut:latest
@@ -850,8 +757,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/heimdall_public:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   botomir:
     image: marshallasch/botomir
@@ -863,8 +768,6 @@ services:
     env_file:
       - ./botomir.env
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   road2ir_backend:
     image: road2ir_inventory_backend:latest
@@ -874,8 +777,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/road2ir/backend:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   road2ir_frontend:
     image: road2ir_inventory_frontend:latest
@@ -885,8 +786,6 @@ services:
       - egress
       - road2ir_internal
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   inventory_demo_backend:
     image: road2ir_inventory_backend:demo
@@ -898,8 +797,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/road2ir_demo/backend:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   inventory_demo_frontend:
     image: road2ir_inventory_frontend:demo
@@ -911,8 +808,6 @@ services:
       - egress
       - road2ir_internal
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   wrapped:
     image: aunefyren/wrapperr:latest
@@ -920,16 +815,11 @@ services:
       - plex_internal
       - ingress
       - egress
-    ports:
-      - 8282:8282
     environment:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/wrapperr/:/app/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
 
   plexripper:
     image: plexripper/plexripper:0.31.1
@@ -951,7 +841,6 @@ services:
 #     temporary testing services
 #       192.168.4.150-199
 ######################################################
-
   # this is the pimary DNS server
   # need to figure out a better secondary for the backup
   pihole:
@@ -983,10 +872,6 @@ services:
       - ${CONFIG_VOLUMES}/pihole/config:/etc/pihole
       - ${CONFIG_VOLUMES}/pihole/dnsmasq:/etc/dnsmasq.d
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.pihole.loadbalancer.server.port=443"
-      - "traefik.http.services.pihole.loadbalancer.server.scheme=https"
 
   homeassistant:
     image: linuxserver/homeassistant
@@ -1003,9 +888,6 @@ services:
     ports:
      - 8123:80
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
 
   authelia:
     image: authelia/authelia:4.39
@@ -1026,8 +908,6 @@ services:
       - smtp_password
       - oidc_hmac
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   printer:
     image: thyrlian/air-pdf-printer
@@ -1057,8 +937,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/command-bot:/config
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
   handbrake:
     image: jlesage/handbrake
@@ -1079,8 +957,6 @@ services:
     ports:
      - 5800:5800
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
 
 secrets:
   ldap_admin_password:
@@ -1090,10 +966,8 @@ secrets:
   oidc_hmac:
     environment: "AUTHELIA_OIDC_HMAC"
 
-
 volumes:
   model-cache:
-
 ######################################################
 #       NETWORK SETUP
 ######################################################

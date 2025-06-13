@@ -411,11 +411,8 @@ services:
   prowlarr:
     image: linuxserver/prowlarr
     networks:
-      plex_internal: {}
-      egress: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.143
-
+      - plex_internal
+      - egress
     environment:
       - PUID
       - PGID

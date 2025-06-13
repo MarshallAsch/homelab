@@ -429,17 +429,6 @@ services:
       - ${CONFIG_VOLUMES}/jackett/torrents:/data/watch
     restart: unless-stopped
 
-  led:
-    image: marshallasch/led-controller
-    profiles:
-      - temp
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.105
-    environment:
-      - TZ
-    restart: unless-stopped
-
   lubelogger:
     image: ghcr.io/hargata/lubelogger:latest
     user: "${PUID}:${PGID}"

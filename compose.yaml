@@ -214,21 +214,6 @@ services:
 #     NON WEB
 #     192.168.4.40-49
 ######################################################
-  calibre-backend:
-    image: linuxserver/calibre
-    profiles:
-      - temp
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.40
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/calibre/watch:/watch
-      - ${CONFIG_VOLUMES}/calibre/config:/config
-    restart: unless-stopped
 
   diun:
     image: crazymax/diun:latest

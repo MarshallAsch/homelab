@@ -424,26 +424,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.sonarr.loadbalancer.server.port=9696"
 
-  jackett:
-    image: linuxserver/jackett
-    networks:
-      plex_internal: {}
-      egress: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.144
-
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/jackett/config:/config
-      - ${CONFIG_VOLUMES}/jackett/torrents:/downloads
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.jackett.loadbalancer.server.port=9117"
-
   unifi:
     image: linuxserver/unifi-network-application:latest
     mem_limit: 2g

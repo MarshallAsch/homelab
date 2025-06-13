@@ -989,7 +989,7 @@ services:
       - "traefik.http.services.wrapperr.loadbalancer.server.port=8282"
 
   plexripper:
-    image: plexripper/plexripper:0.26.0
+    image: plexripper/plexripper:0.31.1
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.155

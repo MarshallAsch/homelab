@@ -546,24 +546,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.lubelogger.loadbalancer.server.port=5000"
 
-  # This is for the catch all for the lab home page
-  heimdall:
-    image: linuxserver/heimdall
-    networks:
-      - plex_internal
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/heimdall:/config
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.heimdall.loadbalancer.server.port=80"
-      - "traefik.http.routers.heimdall.priority=1"
-      - "traefik.http.routers.heimdall.rule=HostRegexp(`{subdomain:[a-z]+}.home`)"
-
   papermerge:
     image: linuxserver/papermerge
     profiles:

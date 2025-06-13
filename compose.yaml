@@ -93,28 +93,6 @@ services:
     labels:
       - "traefik.enable=false"
 
-  mariadb_photos:
-    image: linuxserver/mariadb
-    profiles:
-      - temp
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.22
-    #command: mysqld --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - MYSQL_ROOT_PASSWORD=insecure
-      - MYSQL_DATABASE=photoprism
-      - MYSQL_USER=photoprism
-      - MYSQL_PASSWORD=insecure
-    volumes:
-      - ${CONFIG_VOLUMES}/mariadb_photos:/config
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
-
   mongo_botomir:
     image: mongo:5.0
     profiles:
@@ -875,75 +853,6 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
-
-  photoprism:
-    image: photoprism/photoprism:latest
-    profiles:
-      - temp
-    depends_on:
-      - mariadb_photos
-    user: "${PUID}:${PGID}"
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.206
-    ports:
-      - "2342:2342" # HTTP port (host:container)
-    environment:
-      - PHOTOPRISM_ADMIN_PASSWORD=insecure          # PLEASE CHANGE: Your initial admin password (min 4 characters)
-      - PHOTOPRISM_SITE_URL=https://photoprism.${DOMAIN}/  # Public server URL incl http:// or https:// and /path, :port is optional
-      - PHOTOPRISM_ORIGINALS_LIMIT=5000               # File size limit for originals in MB (increase for high-res video)
-      - PHOTOPRISM_HTTP_COMPRESSION=gzip            # Improves transfer speed and bandwidth utilization (none or gzip)
-      - PHOTOPRISM_DEBUG=false                      # Run in debug mode (shows additional log messages)
-      - PHOTOPRISM_PUBLIC=false                     # No authentication required (disables password protection)
-      - PHOTOPRISM_READONLY=false                   # Don't modify originals directory (reduced functionality)
-      - PHOTOPRISM_EXPERIMENTAL=false               # Enables experimental features
-      - PHOTOPRISM_DISABLE_CHOWN=false              # Disables storage permission updates on startup
-      - PHOTOPRISM_DISABLE_WEBDAV=false             # Disables built-in WebDAV server
-      - PHOTOPRISM_DISABLE_SETTINGS=false           # Disables Settings in Web UI
-      - PHOTOPRISM_DISABLE_TENSORFLOW=false         # Disables all features depending on TensorFlow
-      - PHOTOPRISM_DISABLE_FACES=false              # Disables facial recognition
-      - PHOTOPRISM_DISABLE_CLASSIFICATION=false     # Disables image classification
-      - PHOTOPRISM_DARKTABLE_PRESETS=false          # Enables Darktable presets and disables concurrent RAW conversion
-      - PHOTOPRISM_DETECT_NSFW=true                # Flag photos as private that MAY be offensive (requires TensorFlow)
-      - PHOTOPRISM_UPLOAD_NSFW=true                 # Allow uploads that MAY be offensive
-      # PHOTOPRISM_DATABASE_DRIVER: "sqlite"         # SQLite is an embedded database that doesn't require a server
-      - PHOTOPRISM_DATABASE_DRIVER=mysql            # Use MariaDB 10.5+ or MySQL 8+ instead of SQLite for improved performance
-      - PHOTOPRISM_DATABASE_SERVER=mariadb_photos:3306     # MariaDB or MySQL database server (hostname:port)
-      - PHOTOPRISM_DATABASE_NAME=photoprism         # MariaDB or MySQL database schema name
-      - PHOTOPRISM_DATABASE_USER=photoprism         # MariaDB or MySQL database user name
-      - PHOTOPRISM_DATABASE_PASSWORD=insecure       # MariaDB or MySQL database user password
-      - PHOTOPRISM_SITE_TITLE=PhotoPrism
-      - PHOTOPRISM_SITE_CAPTION=Browse Your Life
-      - PHOTOPRISM_SITE_DESCRIPTION=My Amazing photos storage
-      - PHOTOPRISM_SITE_AUTHOR=Marshall
-      ## Set a non-root user, group, or custom umask if your Docker environment doesn't support this natively:
-      # PHOTOPRISM_UID=1027
-      # PHOTOPRISM_GID=100
-      # PHOTOPRISM_UMASK: 0000
-      ## Enable TensorFlow AVX2 support for modern Intel CPUs (requires starting the container as root):
-      # PHOTOPRISM_INIT: "tensorflow-amd64-avx2"
-      ## Hardware video transcoding config (optional):
-      # PHOTOPRISM_FFMPEG_BUFFERS: "64"              # FFmpeg capture buffers (default: 32)
-      # PHOTOPRISM_FFMPEG_BITRATE: "32"              # FFmpeg encoding bitrate limit in Mbit/s (default: 50)
-      # PHOTOPRISM_FFMPEG_ENCODER: "h264_v4l2m2m"    # Use Video4Linux for AVC transcoding (default: libx264)
-      # PHOTOPRISM_FFMPEG_ENCODER: "h264_qsv"        # Use Intel Quick Sync Video for AVC transcoding (default: libx264)
-      # PHOTOPRISM_INIT: "intel-graphics tensorflow-amd64-avx2" # Enable TensorFlow AVX2 & Intel Graphics support
-      - HOME=/photoprism
-    ## Hardware devices for video transcoding and machine learning (optional):
-    # devices:
-    #  - "/dev/video11:/dev/video11" # Video4Linux (h264_v4l2m2m)
-    #  - "/dev/dri/renderD128:/dev/dri/renderD128" # Intel GPU
-    #  - "/dev/dri/card0:/dev/dri/card0"
-    working_dir: "/photoprism"
-    volumes:
-      ## The *originals* folder contains your original photo and video files (- "[host folder]:/photoprism/originals"):
-      - "${MASS_VOLUMES}/photoprism/originals:/photoprism/originals"
-      - "${MASS_VOLUMES}/photoprism/import:/photoprism/import"
-      ## Cache, session, thumbnail, and sidecar files will be created in the *storage* folder (never remove):
-      - "${MASS_VOLUMES}/photoprism/storage:/photoprism/storage"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.photoprism.loadbalancer.server.port=2342"
 
   collabora:
     image: collabora/code

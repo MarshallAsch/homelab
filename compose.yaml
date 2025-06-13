@@ -745,19 +745,6 @@ services:
       - PGID
       - TZ
 
-  heimdall_public:
-    image: linuxserver/heimdall
-    networks:
-      - plex_internal
-      - egress
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/heimdall_public:/config
-    restart: unless-stopped
-
   botomir:
     image: marshallasch/botomir
     networks:

@@ -526,25 +526,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.lubelogger.loadbalancer.server.port=5000"
 
-  papermerge:
-    image: linuxserver/papermerge
-    profiles:
-      - temp
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.107
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/papermerge:/config
-      - ${MASS_VOLUMES}/papermerge:/data
-    restart: unless-stopped
-    labels:
-       - "traefik.enable=true"
-       - "traefik.http.services.papermerge.loadbalancer.server.port=8000"
-
   paperless:
     image: linuxserver/paperless-ng
     profiles:

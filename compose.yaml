@@ -124,6 +124,14 @@ services:
       test: redis-cli ping || exit 1
     restart: unless-stopped
 
+  grampsweb_redis:
+    image: docker.io/library/redis:7.2.4-alpine
+    networks:
+      - gramps_internal
+    restart: unless-stopped
+    environment:
+      - TZ
+
   unifi-db:
     image: mongo:7.0.11
     networks:
@@ -919,6 +927,37 @@ services:
      - 5800:5800
     restart: unless-stopped
 
+
+   grampsweb: &grampsweb
+    image: ghcr.io/gramps-project/grampsweb:latest
+    restart: unless-stopped
+    networks:
+      - gramps_internal
+      - internal
+    environment:
+      GRAMPSWEB_TREE: "Gramps Web"  # will create a new tree if not exists
+      GRAMPSWEB_CELERY_CONFIG__broker_url: "redis://grampsweb_redis:6379/0"
+      GRAMPSWEB_CELERY_CONFIG__result_backend: "redis://grampsweb_redis:6379/0"
+      GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://grampsweb_redis:6379/1
+    depends_on:
+      - grampsweb_redis
+    volumes:
+      - ${CONFIG_VOLUMES}/gramps/users:/app/users  # persist user database
+      - ${CONFIG_VOLUMES}/gramps/index:/app/indexdir  # persist search index
+      - ${CONFIG_VOLUMES}/gramps/thumb_cache:/app/thumbnail_cache  # persist thumbnails
+      - ${CONFIG_VOLUMES}/gramps/cache:/app/cache  # persist export and report caches
+      - ${CONFIG_VOLUMES}/gramps/secret:/app/secret  # persist flask secret
+      - ${CONFIG_VOLUMES}/gramps/db:/root/.gramps/grampsdb  # persist Gramps database
+      - ${CONFIG_VOLUMES}/gramps/media:/app/media  # persist media files
+
+  grampsweb_celery:
+    <<: *grampsweb  # YAML merge key copying the entire grampsweb service config
+    networks:
+      - gramps_internal
+    depends_on:
+      - grampsweb_redis
+    command: celery -A gramps_webapi.celery worker --loglevel=INFO --concurrency=2
+
 secrets:
   ldap_admin_password:
     environment: "LDAP_ADMIN_PASSWORD"
@@ -936,6 +975,8 @@ networks:
   internal:
     internal: true
   immich_internal:
+    internal: true
+  gramps_internal:
     internal: true
   plex_internal:
     internal: true

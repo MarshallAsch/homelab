@@ -938,6 +938,12 @@ services:
       GRAMPSWEB_CELERY_CONFIG__broker_url: "redis://grampsweb_redis:6379/0"
       GRAMPSWEB_CELERY_CONFIG__result_backend: "redis://grampsweb_redis:6379/0"
       GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://grampsweb_redis:6379/1
+      BASE_URL: "https://gramps.marshallasch.ca/"
+      EMAIL_HOST: "smtp.sendgrid.net"
+      EMAIL_PORT: 587
+      EMAIL_HOST_USER: apikey
+      EMAIL_HOST_PASSWORD: "${GRAMPS_SMTP_PASSWORD}"
+      DEFAULT_FROM_EMAIL: "gramps@marshallasch.ca"
     depends_on:
       - grampsweb_redis
     volumes:

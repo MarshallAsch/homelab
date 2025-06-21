@@ -927,8 +927,7 @@ services:
      - 5800:5800
     restart: unless-stopped
 
-
-   grampsweb: &grampsweb
+  grampsweb: &grampsweb
     image: ghcr.io/gramps-project/grampsweb:latest
     restart: unless-stopped
     networks:

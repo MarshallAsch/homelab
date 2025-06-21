@@ -932,7 +932,7 @@ services:
     restart: unless-stopped
     networks:
       - gramps_internal
-      - internal
+      - ingress
     environment:
       GRAMPSWEB_TREE: "Gramps Web"  # will create a new tree if not exists
       GRAMPSWEB_CELERY_CONFIG__broker_url: "redis://grampsweb_redis:6379/0"

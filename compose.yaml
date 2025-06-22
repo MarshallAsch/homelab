@@ -192,7 +192,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -962,6 +962,26 @@ services:
     depends_on:
       - grampsweb_redis
     command: celery -A gramps_webapi.celery worker --loglevel=INFO --concurrency=2
+
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:latest-rootless
+    restart: unless-stopped
+    networks:
+      - ingress
+    user: ${PUID}:${PGID}
+    environment:
+    - TZ
+    - HBOX_LOG_LEVEL=info
+    - HBOX_LOG_FORMAT=text
+    - HBOX_WEB_MAX_FILE_UPLOAD=10
+    - HBOX_OPTIONS_ALLOW_ANALYTICS=false
+    - HBOX_MAILER_HOST=smtp.sendgrid.net
+    - HBOX_MAILER_PORT=587
+    - HBOX_MAILER_USERNAME=apikey
+    - HBOX_MAILER_PASSWORD="${HOMEBOX_SMTP_PASSWORD}"
+    - HBOX_MAILER_FROM=homebox@marshallasch.ca
+    volumes:
+      - ${CONFIG_VOLUMES}/homebox:/data
 
 secrets:
   ldap_admin_password:

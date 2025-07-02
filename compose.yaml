@@ -65,6 +65,17 @@ services:
       - ${CONFIG_VOLUMES}/immich/db:/var/lib/postgresql/data
     restart: unless-stopped
 
+  firefly_db:
+    image: linuxserver/mariadb:lts
+    restart: unless-stopped
+    env_file: .firefly.db.env
+    environment:
+      - MYSQL_PASSWORD=${FIREFLY_DB_PASSWORD}
+    networks:
+      - firefly_iii
+    volumes:
+      - ${CONFIG_VOLUMES}/firefly/db:/var/lib/mysql
+
   mongo:
     image: mongo
     mem_limit: 500m
@@ -192,7 +203,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox,firefly
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -570,6 +581,42 @@ services:
     restart: unless-stopped
     healthcheck:
       disable: false
+
+  firefly:
+    image: fireflyiii/core:latest
+    restart: unless-stopped
+    volumes:
+      - ${CONFIG_VOLUMES}/firefly/upload:/var/www/html/storage/upload
+    env_file: .firefly.env
+    environment:
+      - DB_PASSWORD=${FIREFLY_DB_PASSWORD}
+    networks:
+      - firefly_iii
+      - ingress
+      - lab_net
+    ports:
+      - 80:8080
+    depends_on:
+      - firefly_db
+
+  firefly_cron:
+    #
+    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
+    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
+    #
+    image: alpine
+    restart: unless-stopped
+    env_file: .firefly.env
+    environment:
+      - DB_PASSWORD=${FIREFLY_DB_PASSWORD}
+    command: sh -c "
+      apk add tzdata
+      && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime
+      | echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/PLEASE_REPLACE_WITH_32_CHAR_CODE;echo\"
+      | crontab -
+      && crond -f -L /dev/stdout"
+    networks:
+      - firefly_iii
 
 ######################################################
 #     EXTERNAL ACCESS
@@ -1002,6 +1049,8 @@ networks:
   immich_internal:
     internal: true
   gramps_internal:
+    internal: true
+  firefly_iii:
     internal: true
   plex_internal:
     internal: true

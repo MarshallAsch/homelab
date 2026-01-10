@@ -2,9 +2,9 @@ name: homelab
 
 services:
 
-######################################################
-#     DATABASES
-######################################################
+  ######################################################
+  #     DATABASES
+  ######################################################
   mariadb:
     image: linuxserver/mariadb
     networks:
@@ -104,7 +104,6 @@ services:
     image: mongo:5.0
     profiles:
       - temp
-    #mem_limit: 500m
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.23
@@ -172,16 +171,16 @@ services:
       LDAP_BASE_DN: "dc=marshallasch,dc=ca"
       LDAP_OPENLDAP_UID: "${PUID}"
       LDAP_OPENLDAP_GID: "${PGID}"
-      LDAP_ADMIN_PASSWORD: "${LDAP_ADMIN_PASSWORD}" # password for admin@domain.tld
-      LDAP_CONFIG_PASSWORD: "${LDAP_CONFIG_PASSWORD}" # password for config (not sure what this does)
+      LDAP_ADMIN_PASSWORD: "${LDAP_ADMIN_PASSWORD}"  # password for admin@domain.tld
+      LDAP_CONFIG_PASSWORD: "${LDAP_CONFIG_PASSWORD}"  # password for config (not sure what this does)
       LDAP_TLS_VERIFY_CLIENT: "try"
       LDAP_READONLY_USER: "false"
       LDAP_RFC2307BIS_SCHEMA: "true"
       LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
 
-######################################################
-#     Media Services
-######################################################
+  ######################################################
+  #     Media Services
+  ######################################################
   sonarr:
     image: linuxserver/sonarr
     networks:
@@ -348,12 +347,12 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.155
     environment:
-     - PUID
-     - PGID
-     - TZ
+      - PUID
+      - PGID
+      - TZ
     volumes:
-    - ${MASS_VOLUMES}/plex:/plex
-    - ${CONFIG_VOLUMES}/plexripper:/Config
+      - ${MASS_VOLUMES}/plex:/plex
+      - ${CONFIG_VOLUMES}/plexripper:/Config
     ports:
       - 7000:7000
 
@@ -386,23 +385,23 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.154
     environment:
-     - PUID
-     - PGID
-     - TZ
-     - USER_ID=$PUID
-     - GROUP_ID=$PGID
+      - PUID
+      - PGID
+      - TZ
+      - USER_ID=$PUID
+      - GROUP_ID=$PGID
     volumes:
-     - ${CONFIG_VOLUMES}/handbrake/config:/config
-     - ${CONFIG_VOLUMES}/handbrake/watch:/watch
-     - ${CONFIG_VOLUMES}/handbrake/storage:/storage
-     - ${CONFIG_VOLUMES}/handbrake/output:/output
+      - ${CONFIG_VOLUMES}/handbrake/config:/config
+      - ${CONFIG_VOLUMES}/handbrake/watch:/watch
+      - ${CONFIG_VOLUMES}/handbrake/storage:/storage
+      - ${CONFIG_VOLUMES}/handbrake/output:/output
     ports:
-     - 5800:5800
+      - 5800:5800
     restart: unless-stopped
 
-######################################################
-#     Core Services
-######################################################
+  ######################################################
+  #     Core Services
+  ######################################################
 
   ldap-user-manager:
     image: wheelybird/ldap-user-manager:latest
@@ -414,25 +413,25 @@ services:
       - openldap
     environment:
       TZ: ${TZ}
-      SERVER_HOSTNAME: "home.marshallasch.ca" # url for webui
+      SERVER_HOSTNAME: "home.marshallasch.ca"  # url for webui
       SERVER_PATH: "/ldap"
-      ORGANISATION_NAME: "Marshall Asch Homelab" # Org name
+      ORGANISATION_NAME: "Marshall Asch Homelab"  # Org name
       LDAP_URI: "ldaps://openldap"
       LDAP_IGNORE_CERT_ERRORS: "true"
-      LDAP_BASE_DN: "dc=marshallasch,dc=ca" # edit domain tld same as above
-      LDAP_ADMINS_GROUP: "admins" # admin group
-      LDAP_ADMIN_BIND_DN: "cn=admin,dc=marshallasch,dc=ca" # edit domain tld
-      LDAP_ADMIN_BIND_PWD: "${LDAP_ADMIN_PASSWORD}" # admin password set above
+      LDAP_BASE_DN: "dc=marshallasch,dc=ca"  # edit domain tld same as above
+      LDAP_ADMINS_GROUP: "admins"  # admin group
+      LDAP_ADMIN_BIND_DN: "cn=admin,dc=marshallasch,dc=ca"  # edit domain tld
+      LDAP_ADMIN_BIND_PWD: "${LDAP_ADMIN_PASSWORD}"  # admin password set above
       LDAP_USES_NIS_SCHEMA: "false"
       LDAP_REQUIRE_STARTTLS: "false"
-      EMAIL_DOMAIN: "marshallasch.ca" # email @this.part.here
+      EMAIL_DOMAIN: "marshallasch.ca"  # email @this.part.here
       NO_HTTPS: "true"
       SMTP_HOSTNAME: ${SMTP_HOST}
       SMTP_HOST_PORT: ${SMTP_PORT}
       SMTP_USERNAME: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASS}
-      SMTP_USE_TLS: TRUE
-      EMAIL_FROM_ADDRESS: "no-reply@marshallasch.ca" # your email address
+      SMTP_USE_TLS: "TRUE"
+      EMAIL_FROM_ADDRESS: "no-reply@marshallasch.ca"  # your email address
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
       USERNAME_FORMAT: "{first_name}{last_name}"
       ENFORCE_SAFE_SYSTEM_NAMES: "FALSE"
@@ -518,9 +517,9 @@ services:
       - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
     restart: always
 
-######################################################
-#     Monitoring Services
-######################################################
+  ######################################################
+  #     Monitoring Services
+  ######################################################
 
   speedtest:
     image: lscr.io/linuxserver/speedtest-tracker:latest
@@ -554,9 +553,9 @@ services:
       - WEB_PORT=8080
       - BASE_PATH=/peanut
 
-######################################################
-#     Home Services
-######################################################
+  ######################################################
+  #     Home Services
+  ######################################################
 
   homepage:
     image: ghcr.io/gethomepage/homepage:v1.5
@@ -565,9 +564,8 @@ services:
       - plex_internal
       - egress
     volumes:
-      - ${CONFIG_VOLUMES}/homepage:/app/config # Make sure your local config directory exists
+      - ${CONFIG_VOLUMES}/homepage:/app/config  # Make sure your local config directory exists
       - ${MASS_VOLUMES}/hdd:/scratch:ro
-      # - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=home.marshallasch.ca
       - LOG_LEVEL=debug
@@ -615,9 +613,6 @@ services:
     networks:
       - immich_internal
       - egress
-    # extends:
-    #   file: hwaccel.transcoding.yml
-    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
     volumes:
       - ${MASS_VOLUMES}/images/:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
@@ -638,14 +633,10 @@ services:
       disable: false
 
   immich_ml:
-    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
     image: ghcr.io/immich-app/immich-machine-learning:release
     networks:
       - immich_internal
       - egress
-    # extends: # uncomment this section for hardware acceleration - see https://immich.app/docs/features/ml-hardware-acceleration
-    #   file: hwaccel.ml.yml
-    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
     volumes:
       - model-cache:/cache
     environment:
@@ -683,13 +674,13 @@ services:
       - ingress
       - egress
     environment:
-     - PUID
-     - PGID
-     - TZ
-     - DOCKER_MODS=linuxserver/mods:universal-calibre
+      - PUID
+      - PGID
+      - TZ
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
     volumes:
-     - ${CONFIG_VOLUMES}/calibre-web/config:/config
-     - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
+      - ${CONFIG_VOLUMES}/calibre-web/config:/config
+      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
     restart: unless-stopped
 
   gitea:
@@ -717,9 +708,9 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-######################################################
-#     Support Services
-######################################################
+  ######################################################
+  #     Support Services
+  ######################################################
 
   collabora:
     image: collabora/code
@@ -737,7 +728,8 @@ services:
 
   firefly_cron:
     #
-    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
+    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an
+    # environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
     # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
     #
     image: alpine
@@ -761,9 +753,9 @@ services:
       - lab_net
     env_file: .importer.env
 
-######################################################
-#     External Services
-######################################################
+  ######################################################
+  #     External Services
+  ######################################################
   botomir:
     image: marshallasch/botomir
     networks:
@@ -804,9 +796,9 @@ services:
       - ingress
     restart: unless-stopped
 
-######################################################
-#     Network Services
-######################################################
+  ######################################################
+  #     Network Services
+  ######################################################
 
   pihole:
     image: pihole/pihole:latest
@@ -815,7 +807,7 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.150
         aliases:
-           - dns1
+          - dns1
     dns:
       - 127.0.0.1
       - 1.1.1.1
@@ -871,9 +863,9 @@ services:
       - 6789:6789
     restart: unless-stopped
 
-######################################################
-#     Testing and Temporary
-######################################################
+  ######################################################
+  #     Testing and Temporary
+  ######################################################
 
   paperless:
     image: linuxserver/paperless-ng
@@ -968,13 +960,13 @@ services:
       lab_net:
         ipv4_address: ${SUBNET}.151
     environment:
-     - PUID
-     - PGID
-     - TZ
+      - PUID
+      - PGID
+      - TZ
     volumes:
-     - ${CONFIG_VOLUMES}/homeassistant:/config
+      - ${CONFIG_VOLUMES}/homeassistant:/config
     ports:
-     - 8123:80
+      - 8123:80
     restart: unless-stopped
 
   printer:
@@ -1024,7 +1016,7 @@ networks:
   egress: {}
   lab_net:
     driver: macvlan
-#    enable_ipv6: true
+    # enable_ipv6: true
     driver_opts:
       parent: eno1
     ipam:

@@ -17,6 +17,21 @@ services:
       - ${CONFIG_VOLUMES}/mariadb:/config
     restart: unless-stopped
 
+  inventory_db:
+    image: linuxserver/mariadb
+    networks:
+      - inventory_internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=${INVENTORY_DB}
+      - MYSQL_USER=${INVENTORY_USER}
+      - MYSQL_PASSWORD=${INVENTORY_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/road2ir/db:/config
+    restart: unless-stopped
+
   fills_db:
     image: linuxserver/mariadb
     networks:
@@ -774,6 +789,21 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/fills/app:/config
 
+  inventory_backend:
+    image: road2ir_inventory_backend:latest
+    networks:
+      - inventory_internal
+      - ingress
+    volumes:
+      - ${CONFIG_VOLUMES}/road2ir/backend:/config
+    restart: unless-stopped
+
+  inventory_frontend:
+    image: road2ir_inventory_frontend:latest
+    networks:
+      - ingress
+    restart: unless-stopped
+
 ######################################################
 #     Network Services
 ######################################################
@@ -976,6 +1006,8 @@ networks:
   internal:
     internal: true
   immich_internal:
+    internal: true
+  inventory_internal:
     internal: true
   gitea_internal:
     internal: true

@@ -86,26 +86,6 @@ services:
       - ${CONFIG_VOLUMES}/postal/db:/config
     restart: unless-stopped
 
-  mongo:
-    image: mongo
-    mem_limit: 500m
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.21
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=password
-    volumes:
-      - ${CONFIG_VOLUMES}/mongo:/data/db
-    profiles:
-      - temp
-    ports:
-      - 27017:27017
-    restart: unless-stopped
-
   mongo_botomir:
     image: mongo:5.0
     profiles:
@@ -767,32 +747,6 @@ services:
     volumes:
      - ${CONFIG_VOLUMES}/calibre-web/config:/config
      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
-    restart: unless-stopped
-
-  slackbot:
-    image: marshallasch/slack-name-bot
-    user: "${PUID}:${PGID}"
-    profiles:
-      - temp
-    depends_on:
-      - mongo
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.205
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - SLACK_ACCESS_TOKEN
-      - SLACK_SIGNING_SECRET
-      - DB_HOST=mongo
-      - DB_USER=slackBot
-      - DB_PASS=slackpass
-      - DATABASE=slack_users
-    volumes:
-      - ${CONFIG_VOLUMES}/slackbot:/usr/src/app/config
-    ports:
-      - 9100:9100
     restart: unless-stopped
 
   collabora:

@@ -193,7 +193,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox,firefly,mail,dive,code
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,firefly,mail,dive,code
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - SWAG_AUTORELOAD=true
@@ -998,26 +998,6 @@ services:
     depends_on:
       - grampsweb_redis
     command: celery -A gramps_webapi.celery worker --loglevel=INFO --concurrency=2
-
-  homebox:
-    image: ghcr.io/sysadminsmedia/homebox:latest-rootless
-    restart: unless-stopped
-    networks:
-      - ingress
-    user: ${PUID}:${PGID}
-    environment:
-    - TZ
-    - HBOX_LOG_LEVEL=info
-    - HBOX_LOG_FORMAT=text
-    - HBOX_WEB_MAX_FILE_UPLOAD=10
-    - HBOX_OPTIONS_ALLOW_ANALYTICS=false
-    - HBOX_MAILER_HOST="${SMTP_HOST}"
-    - HBOX_MAILER_PORT=${SMTP_PORT}
-    - HBOX_MAILER_USERNAME="${SMTP_USER}"
-    - HBOX_MAILER_PASSWORD="${SMTP_PASS}"
-    - HBOX_MAILER_FROM=homebox@marshallasch.ca
-    volumes:
-      - ${CONFIG_VOLUMES}/homebox:/data
 
   fill-station:
     image: marshallasch/fill-station:main

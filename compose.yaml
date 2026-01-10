@@ -447,20 +447,6 @@ services:
       - ${MASS_VOLUMES}/paperless:/data
     restart: unless-stopped
 
-  radarr4k:
-    image: linuxserver/radarr
-    networks:
-      - plex_internal
-      - egress
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/radarr_4k:/config
-      - ${MASS_VOLUMES}/plex:/plex
-    restart: unless-stopped
-
   ldap-user-manager:
     image: wheelybird/ldap-user-manager:latest
     networks:

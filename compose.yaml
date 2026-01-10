@@ -943,23 +943,6 @@ services:
       - ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
       - ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
 
-  command-bot:
-    image: marshallasch/discord-command-bot:latest
-      #user: "${PUID}:${PGID}"
-    profiles:
-      - temp
-    networks:
-      - egress
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - DISCORD_TOKEN=${COMMAND_DISCORD_TOKEN}
-      - DISCORD_CLIENT_ID=${COMMAND_DISCORD_CLIENT_ID}
-    volumes:
-      - ${CONFIG_VOLUMES}/command-bot:/config
-    restart: unless-stopped
-
   handbrake:
     image: jlesage/handbrake
     networks:

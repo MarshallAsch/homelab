@@ -18,6 +18,21 @@ services:
       - ${CONFIG_VOLUMES}/mariadb:/config
     restart: unless-stopped
 
+  fills_db:
+    image: linuxserver/mariadb
+    networks:
+      - internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=${FILLS_DB}
+      - MYSQL_USER=${FILLS_USER}
+      - MYSQL_PASSWORD=${FILLS_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/fills/db:/config
+    restart: unless-stopped
+
   inventory_db:
     image: linuxserver/mariadb
     networks:
@@ -32,6 +47,19 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/road2ir/db:/config
     restart: unless-stopped
+
+  gitea_db:
+    image: docker.io/library/postgres:14
+    restart: always
+    networks:
+      - gitea_internal
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=${GITEA_DB_PASSWORD}
+      - POSTGRES_DB=gitea
+    volumes:
+      - ${CONFIG_VOLUMES}/gitea/postgres:/var/lib/postgresql/data
+
 
   inventory_demo_db:
     image: linuxserver/mariadb
@@ -75,6 +103,21 @@ services:
       - firefly_iii
     volumes:
       - ${CONFIG_VOLUMES}/firefly/db:/var/lib/mysql
+
+  postal_db:
+    image: linuxserver/mariadb
+    networks:
+      - internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=${POSTAL_DB}
+      - MYSQL_USER=${POSTAL_USER}
+      - MYSQL_PASSWORD=${POSTAL_DB_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/postal/db:/config
+    restart: unless-stopped
 
   mongo:
     image: mongo
@@ -192,6 +235,7 @@ services:
     networks:
       plex_internal: {}
       road2ir_internal: {}
+      gitea_internal: {}
       ingress: {}
       immich_internal: {}
       lab_net:
@@ -203,7 +247,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox,firefly
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox,firefly,mail,dive,code
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -503,10 +547,10 @@ services:
       LDAP_REQUIRE_STARTTLS: "false"
       EMAIL_DOMAIN: "marshallasch.ca" # email @this.part.here
       NO_HTTPS: "true"
-      SMTP_HOSTNAME: smtp.sendgrid.net
-      SMTP_HOST_PORT: 587
-      SMTP_USERNAME: "apikey" # email username (usually your email)
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_HOSTNAME: ${SMTP_HOST}
+      SMTP_HOST_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASS}
       SMTP_USE_TLS: TRUE
       EMAIL_FROM_ADDRESS: "no-reply@marshallasch.ca" # your email address
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
@@ -542,7 +586,7 @@ services:
     #   file: hwaccel.transcoding.yml
     #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
     volumes:
-      - ${MASS_VOLUMES}/images:/usr/src/app/upload
+      - ${MASS_VOLUMES}/images/:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
       - ${MASS_VOLUMES}/nextcloud/marshallasch/files/Pictures:/external/marshall:ro
       - ${MASS_VOLUMES}/nextcloud/murrayasch/files:/external/murray:ro
@@ -618,6 +662,13 @@ services:
     networks:
       - firefly_iii
 
+  firefly_import:
+    image: fireflyiii/data-importer:latest
+    networks:
+      - firefly_iii
+      - lab_net
+    env_file: .importer.env
+
 ######################################################
 #     EXTERNAL ACCESS
 #     192.168.4.200
@@ -660,6 +711,54 @@ services:
       - "${MASS_VOLUMES}/plex/extra_data:/config/Library/Application Support/Plex Media Server/Media"
       - ${MASS_VOLUMES}/plex:/data
       - /dev/shm:/transcode
+      - /mnt/hdd:/downloads
+    restart: unless-stopped
+
+  postal:
+    image: ghcr.io/postalserver/postal:3.3.3
+    networks:
+      internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.202
+    command: postal web-server
+    depends_on:
+      - postal_db
+    environment:
+      - MAIN_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+      - MESSAGE_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/postal/app:/config
+    restart: unless-stopped
+
+  postal_worker:
+    image: ghcr.io/postalserver/postal:3.3.4
+    networks:
+      internal: {}
+      egress: {}
+    command: postal worker
+    depends_on:
+      - postal_db
+    environment:
+      - MAIN_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+      - MESSAGE_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/postal/app:/config
+    restart: unless-stopped
+
+  postal_smtp:
+    image: ghcr.io/postalserver/postal:3.3.4
+    networks:
+      internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.203
+    command: postal smtp-server
+    depends_on:
+      - postal_db
+    environment:
+      - MAIN_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+      - MESSAGE_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/postal/app:/config
     restart: unless-stopped
 
   ombi:
@@ -743,8 +842,32 @@ services:
       - domain=files.${DOMAIN}
       - username=admin
       - password=${COLLABORA_PASSWORD}
-
     restart: unless-stopped
+
+  gitea:
+    image: docker.gitea.com/gitea:1.25.3-rootless
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    networks:
+      gitea_internal: {}
+      authelia_internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.208
+    depends_on:
+      - gitea_db
+    environment:
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=gitea_db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
+      - GITEA__server__SSH_PORT=22
+      - GITEA__server__SSH_LISTEN_PORT=2222
+    volumes:
+      - ${CONFIG_VOLUMES}/gitea/data:/var/lib/gitea
+      - ${CONFIG_VOLUMES}/gitea/config:/etc/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
 
   peanut:
     image: brandawg93/peanut:latest
@@ -760,16 +883,18 @@ services:
       - BASE_PATH=/peanut
 
   homepage:
-    image: ghcr.io/gethomepage/homepage:latest
+    image: ghcr.io/gethomepage/homepage:v1.5
     networks:
       - internal
       - plex_internal
       - egress
     volumes:
       - ${CONFIG_VOLUMES}/homepage:/app/config # Make sure your local config directory exists
+      - ${MASS_VOLUMES}/hdd:/scratch:ro
       # - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=home.marshallasch.ca
+      - LOG_LEVEL=debug
       - PUID
       - PGID
       - TZ
@@ -913,6 +1038,8 @@ services:
       - authelia_internal
     environment:
       TZ: "${TZ}"
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: ${SMTP_USER}
+      AUTHELIA_NOTIFIER_SMTP_ADDRESS: "smtp://${SMTP_HOST}:${SMTP_PORT}"
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: '/run/secrets/oidc_hmac'
@@ -986,10 +1113,10 @@ services:
       GRAMPSWEB_CELERY_CONFIG__result_backend: "redis://grampsweb_redis:6379/0"
       GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://grampsweb_redis:6379/1
       BASE_URL: "https://gramps.marshallasch.ca/"
-      EMAIL_HOST: "smtp.sendgrid.net"
-      EMAIL_PORT: 587
-      EMAIL_HOST_USER: apikey
-      EMAIL_HOST_PASSWORD: "${GRAMPS_SMTP_PASSWORD}"
+      EMAIL_HOST: ${SMTP_HOST}
+      EMAIL_PORT: ${SMTP_PORT}
+      EMAIL_HOST_USER: ${SMTP_USER}
+      EMAIL_HOST_PASSWORD: ${SMTP_PASS}
       DEFAULT_FROM_EMAIL: "gramps@marshallasch.ca"
     depends_on:
       - grampsweb_redis
@@ -1022,19 +1149,33 @@ services:
     - HBOX_LOG_FORMAT=text
     - HBOX_WEB_MAX_FILE_UPLOAD=10
     - HBOX_OPTIONS_ALLOW_ANALYTICS=false
-    - HBOX_MAILER_HOST=smtp.sendgrid.net
-    - HBOX_MAILER_PORT=587
-    - HBOX_MAILER_USERNAME=apikey
-    - HBOX_MAILER_PASSWORD="${HOMEBOX_SMTP_PASSWORD}"
+    - HBOX_MAILER_HOST="${SMTP_HOST}"
+    - HBOX_MAILER_PORT=${SMTP_PORT}
+    - HBOX_MAILER_USERNAME="${SMTP_USER}"
+    - HBOX_MAILER_PASSWORD="${SMTP_PASS}"
     - HBOX_MAILER_FROM=homebox@marshallasch.ca
     volumes:
       - ${CONFIG_VOLUMES}/homebox:/data
+
+  fill-station:
+    image: marshallasch/fill-station:main
+    restart: unless-stopped
+    networks:
+      - ingress
+      - internal
+    environment:
+      - DATABASE__HOST=fills_db
+      - DATABASE__DATABASE=${FILLS_DB}
+      - DATABASE__USERNAME=${FILLS_USER}
+      - DATABASE__PASSWORD=${FILLS_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/fills/app:/config
 
 secrets:
   ldap_admin_password:
     environment: "LDAP_ADMIN_PASSWORD"
   smtp_password:
-    environment: "SMTP_PASSWORD"
+    environment: "SMTP_PASS"
   oidc_hmac:
     environment: "AUTHELIA_OIDC_HMAC"
 
@@ -1049,6 +1190,8 @@ networks:
   immich_internal:
     internal: true
   gramps_internal:
+    internal: true
+  gitea_internal:
     internal: true
   firefly_iii:
     internal: true

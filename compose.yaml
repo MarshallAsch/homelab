@@ -4,7 +4,6 @@ services:
 
 ######################################################
 #     DATABASES
-#     192.168.4.20-29
 ######################################################
   mariadb:
     image: linuxserver/mariadb
@@ -166,98 +165,7 @@ services:
       LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
 
 ######################################################
-#     PROXIES
-#     192.168.4.30-39
-######################################################
-  letsencrypt:
-    image: linuxserver/swag
-    networks:
-      plex_internal: {}
-      gitea_internal: {}
-      ingress: {}
-      immich_internal: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.31
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code
-      - VALIDATION=http
-      - ONLY_SUBDOMAINS=true
-      - SWAG_AUTORELOAD=true
-      - EMAIL=${EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
-      - MAXMINDDB_USER_ID
-      - MAXMINDDB_LICENSE_KEY
-    volumes:
-      - ${CONFIG_VOLUMES}/letsencrypt/config:/config
-    restart: unless-stopped
-
-  ddclient:
-    image: lscr.io/linuxserver/ddclient:latest
-    networks:
-      - egress
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - CLOUDFLARE_DNS_TOKEN
-    volumes:
-      - ${CONFIG_VOLUMES}/ddclient:/config
-    restart: unless-stopped
-
-######################################################
-#     NON WEB
-#     192.168.4.40-49
-######################################################
-
-  diun:
-    image: crazymax/diun:latest
-    command: serve
-    networks:
-      - egress
-    volumes:
-      - ${CONFIG_VOLUMES}/diun:/data
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    environment:
-      - TZ
-      - "DIUN_WATCH_SCHEDULE=0 18 * * 1,4"
-      - DIUN_PROVIDERS_DOCKER=true
-      - DIUN_NOTIF_DISCORD_WEBHOOKURL=${DISCORD_URL}
-      - DIUN_NOTIF_DISCORD_TEMPLATEBODY=An update is available for the {{ if .Entry.Image.HubLink }}[**{{ .Entry.Image }}**]({{ .Entry.Image.HubLink }}){{ else }}**{{ .Entry.Image }}**{{ end }}  on {{ .Entry.Image.Domain }}.
-      - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
-    restart: always
-
-  minecraft:
-    image: itzg/minecraft-server:latest
-    profiles:
-      - temp
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.41
-    ports:
-      - 25565:25565
-    volumes:
-      - ${CONFIG_VOLUMES}/direwolf20_1_19b:/data
-    environment:
-      - TZ
-      - MEMORY=8G
-      - EULA=TRUE
-      - ONLINE_MODE=TRUE
-      - TYPE=FTBA
-      - FTB_MODPACK_ID=101
-      - FTB_MODPACK_VERSION_ID=2342
-      - MOTD="Our amazing house minecraft server"
-      # - OPS="cb983183-3e15-4d0d-b16e-74fe031a0937,20c39344-2548-4ddb-b3a6-3315ee664ee3"
-    restart: always
-
-######################################################
-#     INTERNAL ACCESS
-#     192.168.4.100
+#     Media Services
 ######################################################
   sonarr:
     image: linuxserver/sonarr
@@ -353,37 +261,31 @@ services:
       - ${CONFIG_VOLUMES}/prowlarr:/config
     restart: unless-stopped
 
-  unifi:
-    image: linuxserver/unifi-network-application:latest
-    mem_limit: 2g
+  ombi:
+    image: linuxserver/ombi
     networks:
-      unifi: {}
-      authelia_internal: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.103
-        aliases:
-          - thanatos
-    depends_on:
-      - unifi-db
+      - plex_internal
+      - egress
     environment:
       - PUID
       - PGID
-      - MONGO_USER=unifi
-      - MONGO_PASS=$UNIFI_DB_PASS
-      - MONGO_HOST=unifi-db
-      - MONGO_PORT=27017
-      - MONGO_DBNAME=unifi
+      - TZ
     volumes:
-      - ${CONFIG_VOLUMES}/unifi/new:/config
-    ports:
-      - 3478:3478/udp
-      - 10001:10001/udp
-      - 8080:8080
-      - 8081:8081
-      - 8443:8443
-      - 8843:8843
-      - 8880:8880
-      - 6789:6789
+      - ${CONFIG_VOLUMES}/ombi:/config
+    restart: unless-stopped
+
+  tautulli:
+    image: tautulli/tautulli
+    networks:
+      - plex_internal
+      - egress
+    environment:
+      - TZ
+      - PGID
+      - PUID
+    volumes:
+      - ${CONFIG_VOLUMES}/tautulli:/config
+      - ${CONFIG_VOLUMES}/plex/config/Library/Application Support/Plex Media Server/Logs:/plex_logs:ro
     restart: unless-stopped
 
   transmission:
@@ -414,38 +316,78 @@ services:
       - ${CONFIG_VOLUMES}/jackett/torrents:/data/watch
     restart: unless-stopped
 
-  lubelogger:
-    image: ghcr.io/hargata/lubelogger:latest
-    user: "${PUID}:${PGID}"
+  wrapped:
+    image: aunefyren/wrapperr:latest
     networks:
       - plex_internal
-      - internal
+      - egress
     environment:
       - TZ
     volumes:
-      - ${CONFIG_VOLUMES}/lubelogger/config:/App/config
-      - ${CONFIG_VOLUMES}/lubelogger/data:/App/data
-      - ${CONFIG_VOLUMES}/lubelogger/documents:/App/wwwroot/documents
-      - ${CONFIG_VOLUMES}/lubelogger/images:/App/wwwroot/images
-      - ${CONFIG_VOLUMES}/lubelogger/log:/App/log
-      - ${CONFIG_VOLUMES}/lubelogger/keys:/root/.aspnet/DataProtection-Keys
+      - ${CONFIG_VOLUMES}/wrapperr/:/app/config
     restart: unless-stopped
 
-  paperless:
-    image: linuxserver/paperless-ng
-    profiles:
-      - temp
+  plexripper:
+    image: plexripper/plexripper:0.31.1
     networks:
       lab_net:
-        ipv4_address: ${SUBNET}.108
+        ipv4_address: ${SUBNET}.155
     environment:
-      - PUID
-      - PGID
-      - TZ
+     - PUID
+     - PGID
+     - TZ
     volumes:
-      - ${CONFIG_VOLUMES}/paperless:/config
-      - ${MASS_VOLUMES}/paperless:/data
+    - ${MASS_VOLUMES}/plex:/plex
+    - ${CONFIG_VOLUMES}/plexripper:/Config
+    ports:
+      - 7000:7000
+
+  plex:
+    image: plexinc/pms-docker:plexpass
+    networks:
+      plex_internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.201
+    environment:
+      - TZ="America/Toronto"
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_UID=${PUID}
+      - PLEX_GID=${PGID}
+      - CHANGE_CONFIG_DIR_OWNERSHIP=false
+      - PLEX_UPDATE_CHANNEL=4
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ${CONFIG_VOLUMES}/plex/config:/config
+      - "${MASS_VOLUMES}/plex/extra_data:/config/Library/Application Support/Plex Media Server/Media"
+      - ${MASS_VOLUMES}/plex:/data
+      - /dev/shm:/transcode
+      - /mnt/hdd:/downloads
     restart: unless-stopped
+
+  handbrake:
+    image: jlesage/handbrake
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.154
+    environment:
+     - PUID
+     - PGID
+     - TZ
+     - USER_ID=$PUID
+     - GROUP_ID=$PGID
+    volumes:
+     - ${CONFIG_VOLUMES}/handbrake/config:/config
+     - ${CONFIG_VOLUMES}/handbrake/watch:/watch
+     - ${CONFIG_VOLUMES}/handbrake/storage:/storage
+     - ${CONFIG_VOLUMES}/handbrake/output:/output
+    ports:
+     - 5800:5800
+    restart: unless-stopped
+
+######################################################
+#     Core Services
+######################################################
 
   ldap-user-manager:
     image: wheelybird/ldap-user-manager:latest
@@ -481,6 +423,90 @@ services:
       ENFORCE_SAFE_SYSTEM_NAMES: "FALSE"
       LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES: "cn:Display Name,quota_files:Storage quota for Nextcloud,quota_images:Storage quota for immich"
 
+  authelia:
+    image: authelia/authelia:4.39
+    networks:
+      - plex_internal
+      - egress
+      - authelia_internal
+    environment:
+      TZ: "${TZ}"
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: ${SMTP_USER}
+      AUTHELIA_NOTIFIER_SMTP_ADDRESS: "smtp://${SMTP_HOST}:${SMTP_PORT}"
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
+      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: '/run/secrets/oidc_hmac'
+      X_AUTHELIA_CONFIG_FILTERS: template
+    volumes:
+      - ${CONFIG_VOLUMES}/authelia:/config
+    secrets:
+      - ldap_admin_password
+      - smtp_password
+      - oidc_hmac
+    restart: unless-stopped
+
+  letsencrypt:
+    image: linuxserver/swag
+    networks:
+      plex_internal: {}
+      gitea_internal: {}
+      ingress: {}
+      immich_internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.31
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - URL=${DOMAIN}
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code
+      - VALIDATION=http
+      - ONLY_SUBDOMAINS=true
+      - SWAG_AUTORELOAD=true
+      - EMAIL=${EMAIL}
+      - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
+      - MAXMINDDB_USER_ID
+      - MAXMINDDB_LICENSE_KEY
+    volumes:
+      - ${CONFIG_VOLUMES}/letsencrypt/config:/config
+    restart: unless-stopped
+
+  ddclient:
+    image: lscr.io/linuxserver/ddclient:latest
+    networks:
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - CLOUDFLARE_DNS_TOKEN
+    volumes:
+      - ${CONFIG_VOLUMES}/ddclient:/config
+    restart: unless-stopped
+
+  diun:
+    image: crazymax/diun:latest
+    command: serve
+    networks:
+      - egress
+    volumes:
+      - ${CONFIG_VOLUMES}/diun:/data
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      - TZ
+      - "DIUN_WATCH_SCHEDULE=0 18 * * 1,4"
+      - DIUN_PROVIDERS_DOCKER=true
+      - DIUN_NOTIF_DISCORD_WEBHOOKURL=${DISCORD_URL}
+      - DIUN_NOTIF_DISCORD_TEMPLATEBODY=An update is available for the {{ if .Entry.Image.HubLink }}[**{{ .Entry.Image }}**]({{ .Entry.Image.HubLink }}){{ else }}**{{ .Entry.Image }}**{{ end }}  on {{ .Entry.Image.Domain }}.
+      - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
+    restart: always
+
+######################################################
+#     Monitoring Services
+######################################################
+
   speedtest:
     image: lscr.io/linuxserver/speedtest-tracker:latest
     restart: unless-stopped
@@ -499,6 +525,75 @@ services:
       - ASSET_URL=https://speedtest.marshallasch.ca
     volumes:
       - ${CONFIG_VOLUMES}/speedtest:/config
+
+  peanut:
+    image: brandawg93/peanut:latest
+    restart: unless-stopped
+    networks:
+      internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.160
+    volumes:
+      - ${CONFIG_VOLUMES}/peanut:/config
+    environment:
+      - WEB_PORT=8080
+      - BASE_PATH=/peanut
+
+######################################################
+#     Home Services
+######################################################
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v1.5
+    networks:
+      - internal
+      - plex_internal
+      - egress
+    volumes:
+      - ${CONFIG_VOLUMES}/homepage:/app/config # Make sure your local config directory exists
+      - ${MASS_VOLUMES}/hdd:/scratch:ro
+      # - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=home.marshallasch.ca
+      - LOG_LEVEL=debug
+      - PUID
+      - PGID
+      - TZ
+
+  nextcloud:
+    image: linuxserver/nextcloud
+    depends_on:
+      - mariadb
+    networks:
+      - internal
+      - ingress
+      - egress
+      - authelia_internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/nextcloud/config:/config
+      - ${MASS_VOLUMES}/nextcloud:/data
+    restart: unless-stopped
+
+  lubelogger:
+    image: ghcr.io/hargata/lubelogger:latest
+    user: "${PUID}:${PGID}"
+    networks:
+      - plex_internal
+      - internal
+    environment:
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/lubelogger/config:/App/config
+      - ${CONFIG_VOLUMES}/lubelogger/data:/App/data
+      - ${CONFIG_VOLUMES}/lubelogger/documents:/App/wwwroot/documents
+      - ${CONFIG_VOLUMES}/lubelogger/images:/App/wwwroot/images
+      - ${CONFIG_VOLUMES}/lubelogger/log:/App/log
+      - ${CONFIG_VOLUMES}/lubelogger/keys:/root/.aspnet/DataProtection-Keys
+    restart: unless-stopped
 
   immich_server:
     image: ghcr.io/immich-app/immich-server:release
@@ -566,6 +661,65 @@ services:
     depends_on:
       - firefly_db
 
+  calibre:
+    image: linuxserver/calibre-web
+    networks:
+      - authelia_internal
+      - ingress
+      - egress
+    environment:
+     - PUID
+     - PGID
+     - TZ
+     - DOCKER_MODS=linuxserver/mods:universal-calibre
+    volumes:
+     - ${CONFIG_VOLUMES}/calibre-web/config:/config
+     - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
+    restart: unless-stopped
+
+  gitea:
+    image: docker.gitea.com/gitea:1.25.3-rootless
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    networks:
+      gitea_internal: {}
+      authelia_internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.208
+    depends_on:
+      - gitea_db
+    environment:
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=gitea_db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
+      - GITEA__server__SSH_PORT=22
+      - GITEA__server__SSH_LISTEN_PORT=2222
+    volumes:
+      - ${CONFIG_VOLUMES}/gitea/data:/var/lib/gitea
+      - ${CONFIG_VOLUMES}/gitea/config:/etc/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+######################################################
+#     Support Services
+######################################################
+
+  collabora:
+    image: collabora/code
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.207
+    cap_add:
+      - MKNOD
+    environment:
+      - "dictionaries=en_GB en_US"
+      - domain=files.${DOMAIN}
+      - username=admin
+      - password=${COLLABORA_PASSWORD}
+    restart: unless-stopped
+
   firefly_cron:
     #
     # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
@@ -593,48 +747,118 @@ services:
     env_file: .importer.env
 
 ######################################################
-#     EXTERNAL ACCESS
-#     192.168.4.200
+#     External Services
 ######################################################
-  nextcloud:
-    image: linuxserver/nextcloud
-    depends_on:
-      - mariadb
+  botomir:
+    image: marshallasch/botomir
     networks:
-      - internal
       - ingress
       - egress
-      - authelia_internal
+    environment:
+      - TZ
+    env_file:
+      - ./botomir.env
+    restart: unless-stopped
+
+  fill-station:
+    image: marshallasch/fill-station:main
+    restart: unless-stopped
+    networks:
+      - ingress
+      - internal
+    environment:
+      - DATABASE__HOST=fills_db
+      - DATABASE__DATABASE=${FILLS_DB}
+      - DATABASE__USERNAME=${FILLS_USER}
+      - DATABASE__PASSWORD=${FILLS_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/fills/app:/config
+
+######################################################
+#     Network Services
+######################################################
+
+  pihole:
+    image: pihole/pihole:latest
+    networks:
+      internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.150
+        aliases:
+           - dns1
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+      - 1.0.0.1
+    cap_add:
+      - CAP_NET_BIND_SERVICE
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      - TZ
+      - WEBPASSWORD=${DNS_WEB_PASSWORD}
+      - ADMIN_EMAIL=${EMAIL}
+      - DNSMASQ_USER=root
+    volumes:
+      - ${CONFIG_VOLUMES}/pihole/config:/etc/pihole
+      - ${CONFIG_VOLUMES}/pihole/dnsmasq:/etc/dnsmasq.d
+    restart: unless-stopped
+
+  unifi:
+    image: linuxserver/unifi-network-application:latest
+    mem_limit: 2g
+    networks:
+      unifi: {}
+      authelia_internal: {}
+      lab_net:
+        ipv4_address: ${SUBNET}.103
+        aliases:
+          - thanatos
+    depends_on:
+      - unifi-db
+    environment:
+      - PUID
+      - PGID
+      - MONGO_USER=unifi
+      - MONGO_PASS=$UNIFI_DB_PASS
+      - MONGO_HOST=unifi-db
+      - MONGO_PORT=27017
+      - MONGO_DBNAME=unifi
+    volumes:
+      - ${CONFIG_VOLUMES}/unifi/new:/config
+    ports:
+      - 3478:3478/udp
+      - 10001:10001/udp
+      - 8080:8080
+      - 8081:8081
+      - 8443:8443
+      - 8843:8843
+      - 8880:8880
+      - 6789:6789
+    restart: unless-stopped
+
+######################################################
+#     Testing and Temporary
+######################################################
+
+  paperless:
+    image: linuxserver/paperless-ng
+    profiles:
+      - temp
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.108
     environment:
       - PUID
       - PGID
       - TZ
     volumes:
-      - ${CONFIG_VOLUMES}/nextcloud/config:/config
-      - ${MASS_VOLUMES}/nextcloud:/data
-    restart: unless-stopped
-
-  plex:
-    image: plexinc/pms-docker:plexpass
-    networks:
-      plex_internal: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.201
-    environment:
-      - TZ="America/Toronto"
-      - PLEX_CLAIM=${PLEX_CLAIM}
-      - PLEX_UID=${PUID}
-      - PLEX_GID=${PGID}
-      - CHANGE_CONFIG_DIR_OWNERSHIP=false
-      - PLEX_UPDATE_CHANNEL=4
-    devices:
-      - /dev/dri:/dev/dri
-    volumes:
-      - ${CONFIG_VOLUMES}/plex/config:/config
-      - "${MASS_VOLUMES}/plex/extra_data:/config/Library/Application Support/Plex Media Server/Media"
-      - ${MASS_VOLUMES}/plex:/data
-      - /dev/shm:/transcode
-      - /mnt/hdd:/downloads
+      - ${CONFIG_VOLUMES}/paperless:/config
+      - ${MASS_VOLUMES}/paperless:/data
     restart: unless-stopped
 
   postal:
@@ -684,192 +908,28 @@ services:
       - ${CONFIG_VOLUMES}/postal/app:/config
     restart: unless-stopped
 
-  ombi:
-    image: linuxserver/ombi
-    networks:
-      - plex_internal
-      - egress
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/ombi:/config
-    restart: unless-stopped
-
-  tautulli:
-    image: tautulli/tautulli
-    networks:
-      - plex_internal
-      - egress
-    environment:
-      - TZ
-      - PGID
-      - PUID
-    volumes:
-      - ${CONFIG_VOLUMES}/tautulli:/config
-      - ${CONFIG_VOLUMES}/plex/config/Library/Application Support/Plex Media Server/Logs:/plex_logs:ro
-    restart: unless-stopped
-
-  calibre:
-    image: linuxserver/calibre-web
-    networks:
-      - authelia_internal
-      - ingress
-      - egress
-    environment:
-     - PUID
-     - PGID
-     - TZ
-     - DOCKER_MODS=linuxserver/mods:universal-calibre
-    volumes:
-     - ${CONFIG_VOLUMES}/calibre-web/config:/config
-     - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
-    restart: unless-stopped
-
-  collabora:
-    image: collabora/code
+  minecraft:
+    image: itzg/minecraft-server:latest
+    profiles:
+      - temp
     networks:
       lab_net:
-        ipv4_address: ${SUBNET}.207
-    cap_add:
-      - MKNOD
-    environment:
-      - "dictionaries=en_GB en_US"
-      - domain=files.${DOMAIN}
-      - username=admin
-      - password=${COLLABORA_PASSWORD}
-    restart: unless-stopped
-
-  gitea:
-    image: docker.gitea.com/gitea:1.25.3-rootless
-    restart: unless-stopped
-    user: "${PUID}:${PGID}"
-    networks:
-      gitea_internal: {}
-      authelia_internal: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.208
-    depends_on:
-      - gitea_db
-    environment:
-      - GITEA__database__DB_TYPE=postgres
-      - GITEA__database__HOST=gitea_db:5432
-      - GITEA__database__NAME=gitea
-      - GITEA__database__USER=gitea
-      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
-      - GITEA__server__SSH_PORT=22
-      - GITEA__server__SSH_LISTEN_PORT=2222
-    volumes:
-      - ${CONFIG_VOLUMES}/gitea/data:/var/lib/gitea
-      - ${CONFIG_VOLUMES}/gitea/config:/etc/gitea
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-
-  peanut:
-    image: brandawg93/peanut:latest
-    restart: unless-stopped
-    networks:
-      internal: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.160
-    volumes:
-      - ${CONFIG_VOLUMES}/peanut:/config
-    environment:
-      - WEB_PORT=8080
-      - BASE_PATH=/peanut
-
-  homepage:
-    image: ghcr.io/gethomepage/homepage:v1.5
-    networks:
-      - internal
-      - plex_internal
-      - egress
-    volumes:
-      - ${CONFIG_VOLUMES}/homepage:/app/config # Make sure your local config directory exists
-      - ${MASS_VOLUMES}/hdd:/scratch:ro
-      # - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations
-    environment:
-      - HOMEPAGE_ALLOWED_HOSTS=home.marshallasch.ca
-      - LOG_LEVEL=debug
-      - PUID
-      - PGID
-      - TZ
-
-  botomir:
-    image: marshallasch/botomir
-    networks:
-      - ingress
-      - egress
-    environment:
-      - TZ
-    env_file:
-      - ./botomir.env
-    restart: unless-stopped
-
-  wrapped:
-    image: aunefyren/wrapperr:latest
-    networks:
-      - plex_internal
-      - ingress
-      - egress
-    environment:
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/wrapperr/:/app/config
-    restart: unless-stopped
-
-  plexripper:
-    image: plexripper/plexripper:0.31.1
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.155
-    environment:
-     - PUID
-     - PGID
-     - TZ
-    volumes:
-    - ${MASS_VOLUMES}/plex:/plex
-    - ${CONFIG_VOLUMES}/plexripper:/Config
+        ipv4_address: ${SUBNET}.41
     ports:
-      - 7000:7000
-
-######################################################
-#       done service list
-#     temporary testing services
-#       192.168.4.150-199
-######################################################
-  # this is the pimary DNS server
-  # need to figure out a better secondary for the backup
-  pihole:
-    image: pihole/pihole:latest
-    networks:
-      internal: {}
-      lab_net:
-        ipv4_address: ${SUBNET}.150
-        aliases:
-           - dns1
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
-      - 1.0.0.1
-    cap_add:
-      - CAP_NET_BIND_SERVICE
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
+      - 25565:25565
+    volumes:
+      - ${CONFIG_VOLUMES}/direwolf20_1_19b:/data
     environment:
       - TZ
-      - WEBPASSWORD=${DNS_WEB_PASSWORD}
-      - ADMIN_EMAIL=${EMAIL}
-      - DNSMASQ_USER=root
-    volumes:
-      - ${CONFIG_VOLUMES}/pihole/config:/etc/pihole
-      - ${CONFIG_VOLUMES}/pihole/dnsmasq:/etc/dnsmasq.d
-    restart: unless-stopped
+      - MEMORY=8G
+      - EULA=TRUE
+      - ONLINE_MODE=TRUE
+      - TYPE=FTBA
+      - FTB_MODPACK_ID=101
+      - FTB_MODPACK_VERSION_ID=2342
+      - MOTD="Our amazing house minecraft server"
+      # - OPS="cb983183-3e15-4d0d-b16e-74fe031a0937,20c39344-2548-4ddb-b3a6-3315ee664ee3"
+    restart: always
 
   homeassistant:
     image: linuxserver/homeassistant
@@ -887,28 +947,6 @@ services:
      - 8123:80
     restart: unless-stopped
 
-  authelia:
-    image: authelia/authelia:4.39
-    networks:
-      - plex_internal
-      - egress
-      - authelia_internal
-    environment:
-      TZ: "${TZ}"
-      AUTHELIA_NOTIFIER_SMTP_USERNAME: ${SMTP_USER}
-      AUTHELIA_NOTIFIER_SMTP_ADDRESS: "smtp://${SMTP_HOST}:${SMTP_PORT}"
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
-      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
-      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: '/run/secrets/oidc_hmac'
-      X_AUTHELIA_CONFIG_FILTERS: template
-    volumes:
-      - ${CONFIG_VOLUMES}/authelia:/config
-    secrets:
-      - ldap_admin_password
-      - smtp_password
-      - oidc_hmac
-    restart: unless-stopped
-
   printer:
     image: thyrlian/air-pdf-printer
     hostname: printer
@@ -920,40 +958,6 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
       - ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
-
-  handbrake:
-    image: jlesage/handbrake
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.154
-    environment:
-     - PUID
-     - PGID
-     - TZ
-     - USER_ID=$PUID
-     - GROUP_ID=$PGID
-    volumes:
-     - ${CONFIG_VOLUMES}/handbrake/config:/config
-     - ${CONFIG_VOLUMES}/handbrake/watch:/watch
-     - ${CONFIG_VOLUMES}/handbrake/storage:/storage
-     - ${CONFIG_VOLUMES}/handbrake/output:/output
-    ports:
-     - 5800:5800
-    restart: unless-stopped
-
-  fill-station:
-    image: marshallasch/fill-station:main
-    restart: unless-stopped
-    networks:
-      - ingress
-      - internal
-    environment:
-      - DATABASE__HOST=fills_db
-      - DATABASE__DATABASE=${FILLS_DB}
-      - DATABASE__USERNAME=${FILLS_USER}
-      - DATABASE__PASSWORD=${FILLS_PASSWORD}
-    volumes:
-      - ${CONFIG_VOLUMES}/fills/app:/config
 
 secrets:
   ldap_admin_password:

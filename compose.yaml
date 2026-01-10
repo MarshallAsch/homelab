@@ -33,21 +33,6 @@ services:
       - ${CONFIG_VOLUMES}/fills/db:/config
     restart: unless-stopped
 
-  inventory_db:
-    image: linuxserver/mariadb
-    networks:
-      - road2ir_internal
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - MYSQL_DATABASE=${INVENTORY_DB}
-      - MYSQL_USER=${INVENTORY_USER}
-      - MYSQL_PASSWORD=${INVENTORY_PASSWORD}
-    volumes:
-      - ${CONFIG_VOLUMES}/road2ir/db:/config
-    restart: unless-stopped
-
   gitea_db:
     image: docker.io/library/postgres:14
     restart: always
@@ -59,24 +44,6 @@ services:
       - POSTGRES_DB=gitea
     volumes:
       - ${CONFIG_VOLUMES}/gitea/postgres:/var/lib/postgresql/data
-
-
-  inventory_demo_db:
-    image: linuxserver/mariadb
-    profiles:
-      - road2ir_demo
-    networks:
-      - road2ir_internal
-    environment:
-      - PUID
-      - PGID
-      - TZ
-      - MYSQL_DATABASE=${INVENTORY_DB}
-      - MYSQL_USER=${INVENTORY_USER}
-      - MYSQL_PASSWORD=${INVENTORY_DEMO_PASSWORD}
-    volumes:
-      - ${CONFIG_VOLUMES}/road2ir_demo/db:/config
-    restart: unless-stopped
 
   immich_db:
     image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
@@ -234,7 +201,6 @@ services:
     image: linuxserver/swag
     networks:
       plex_internal: {}
-      road2ir_internal: {}
       gitea_internal: {}
       ingress: {}
       immich_internal: {}
@@ -248,7 +214,6 @@ services:
       - TZ
       - URL=${DOMAIN}
       - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,gramps,homebox,firefly,mail,dive,code
-      - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - SWAG_AUTORELOAD=true
@@ -910,46 +875,6 @@ services:
       - ./botomir.env
     restart: unless-stopped
 
-  road2ir_backend:
-    image: road2ir_inventory_backend:latest
-    networks:
-      - egress
-      - road2ir_internal
-    volumes:
-      - ${CONFIG_VOLUMES}/road2ir/backend:/config
-    restart: unless-stopped
-
-  road2ir_frontend:
-    image: road2ir_inventory_frontend:latest
-    deploy:
-      replicas: 2
-    networks:
-      - egress
-      - road2ir_internal
-    restart: unless-stopped
-
-  inventory_demo_backend:
-    image: road2ir_inventory_backend:demo
-    profiles:
-      - road2ir_demo
-    networks:
-      - egress
-      - road2ir_internal
-    volumes:
-      - ${CONFIG_VOLUMES}/road2ir_demo/backend:/config
-    restart: unless-stopped
-
-  inventory_demo_frontend:
-    image: road2ir_inventory_frontend:demo
-    profiles:
-      - road2ir_demo
-    deploy:
-      replicas: 2
-    networks:
-      - egress
-      - road2ir_internal
-    restart: unless-stopped
-
   wrapped:
     image: aunefyren/wrapperr:latest
     networks:
@@ -1198,8 +1123,6 @@ networks:
   plex_internal:
     internal: true
   authelia_internal:
-    internal: true
-  road2ir_internal:
     internal: true
   ingress:
     internal: true

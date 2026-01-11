@@ -450,6 +450,8 @@ services:
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: '/run/secrets/oidc_hmac'
+      AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/session_secret'
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/run/secrets/reset_secret'
       X_AUTHELIA_CONFIG_FILTERS: template
     volumes:
       - ${CONFIG_VOLUMES}/authelia:/config
@@ -457,6 +459,8 @@ services:
       - ldap_admin_password
       - smtp_password
       - oidc_hmac
+      - session_secret
+      - reset_secret
     restart: unless-stopped
 
   letsencrypt:
@@ -989,6 +993,10 @@ secrets:
     environment: "SMTP_PASS"
   oidc_hmac:
     environment: "AUTHELIA_OIDC_HMAC"
+  session_secret:
+    environment: "AUTHELIA_SESSION_SECRET"
+  reset_secret:
+    environment: "AUTHELIA_PASSWORD_RESET_SECRET"
 
 volumes:
   model-cache:

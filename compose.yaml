@@ -900,6 +900,7 @@ services:
     environment:
       - MAIN_DB_PASSWORD=${POSTAL_DB_PASSWORD}
       - MESSAGE_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+      - OIDC_SECRET=${POSTAL_OIDC_SECRET}
     volumes:
       - ${CONFIG_VOLUMES}/postal/app:/config
     restart: unless-stopped
@@ -915,6 +916,7 @@ services:
     environment:
       - MAIN_DB_PASSWORD=${POSTAL_DB_PASSWORD}
       - MESSAGE_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+      - OIDC_SECRET=${POSTAL_OIDC_SECRET}
     volumes:
       - ${CONFIG_VOLUMES}/postal/app:/config
     restart: unless-stopped
@@ -931,6 +933,7 @@ services:
     environment:
       - MAIN_DB_PASSWORD=${POSTAL_DB_PASSWORD}
       - MESSAGE_DB_PASSWORD=${POSTAL_DB_PASSWORD}
+      - OIDC_SECRET=${POSTAL_OIDC_SECRET}
     volumes:
       - ${CONFIG_VOLUMES}/postal/app:/config
     restart: unless-stopped

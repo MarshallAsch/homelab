@@ -709,6 +709,7 @@ services:
       - GITEA__server__SSH_LISTEN_PORT=2222
       - GITEA__service__REGISTER_EMAIL_CONFIRM=true
       - GITEA__service__ENABLE_NOTIFY_MAIL=true
+      - GITEA__service__ENABLE_PASSWORD_SIGNIN_FORM=false
       - GITEA__mailer__ENABLED=true
       - GITEA__mailer__PROTOCOL=smtp+starttls
       - GITEA__mailer__SMTP_ADDR=${SMTP_HOST}
@@ -716,6 +717,8 @@ services:
       - GITEA__mailer__USER=${SMTP_USER}
       - GITEA__mailer__PASSWD=${SMTP_PASS}
       - GITEA__mailer__FROM=Marshalls Gitserver <code@marshallasch.ca>
+      - GITEA__oauth2_client__ENABLE_AUTO_REGISTRATION=true
+      - GITEA__oauth2_client__USERNAME=preferred_username
     volumes:
       - ${CONFIG_VOLUMES}/gitea/data:/var/lib/gitea
       - ${CONFIG_VOLUMES}/gitea/config:/etc/gitea
@@ -1044,3 +1047,4 @@ networks:
       driver: default
       config:
         - subnet: "${SUBNET}.0/24"
+

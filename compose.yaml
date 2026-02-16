@@ -404,7 +404,7 @@ services:
   ######################################################
 
   ldap-user-manager:
-    image: wheelybird/ldap-user-manager:latest
+    image: wheelybird/luminary:latest
     networks:
       - authelia_internal
       - plex_internal
@@ -436,6 +436,9 @@ services:
       USERNAME_FORMAT: "{first_name}{last_name}"
       ENFORCE_SAFE_SYSTEM_NAMES: "FALSE"
       LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES: "cn:Display Name,quota_files:Storage quota for Nextcloud,quota_images:Storage quota for immich"
+      EMAIL_USER_ON_PASSWORD_CHANGE: "TRUE"
+      ADMIN_EMAIL: admin@marshallasch.ca
+      AUDIT_ENABLED: "TRUE"
 
   authelia:
     image: authelia/authelia:4.39
@@ -803,6 +806,7 @@ services:
 
   inventory_backend:
     image: road2ir_inventory_backend:latest
+    pull_policy: never
     networks:
       - inventory_internal
       - ingress
@@ -812,6 +816,7 @@ services:
 
   inventory_frontend:
     image: road2ir_inventory_frontend:latest
+    pull_policy: never
     networks:
       - ingress
     restart: unless-stopped

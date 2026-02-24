@@ -250,6 +250,7 @@ services:
 
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
+    user: "${PUID}:${PGID}"
     init: true
     networks:
       - plex_internal

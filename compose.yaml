@@ -343,6 +343,8 @@ services:
 
   plexripper:
     image: plexripper/plexripper:0.31.1
+    profiles:
+      - test
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.155

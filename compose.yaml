@@ -248,6 +248,24 @@ services:
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
 
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    networks:
+      - plex_internal
+      - egress
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG_VOLUMES}/seerr:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    restart: unless-stopped
+
   bazarr:
     image: linuxserver/bazarr
     networks:
@@ -484,7 +502,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true

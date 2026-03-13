@@ -817,11 +817,17 @@ services:
     networks:
       - ingress
       - internal
+      - egress
     environment:
       - DATABASE__HOST=fills_db
       - DATABASE__DATABASE=${FILLS_DB}
       - DATABASE__USERNAME=${FILLS_USER}
       - DATABASE__PASSWORD=${FILLS_PASSWORD}
+      - AUTH_TRUST_HOST=true
+      - AUTH_URL=https://dive.marshallasch.ca
+      - AUTH_CLIENT_ID=${FILLS_AUTH_CLIENT_ID}
+      - AUTH_SECRET=${FILLS_AUTH_SECRET}
+      - AUTH_CLIENT_SECRET=${FILLS_AUTH_CLIENT_SECRET}
     volumes:
       - ${CONFIG_VOLUMES}/fills/app:/config
 

@@ -294,19 +294,6 @@ services:
       - ${CONFIG_VOLUMES}/prowlarr:/config
     restart: unless-stopped
 
-  ombi:
-    image: linuxserver/ombi
-    networks:
-      - plex_internal
-      - egress
-    environment:
-      - PUID
-      - PGID
-      - TZ
-    volumes:
-      - ${CONFIG_VOLUMES}/ombi:/config
-    restart: unless-stopped
-
   tautulli:
     image: tautulli/tautulli
     networks:

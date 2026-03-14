@@ -100,6 +100,23 @@ services:
       - ${CONFIG_VOLUMES}/postal/db:/config
     restart: unless-stopped
 
+  analytics_db:
+    image: docker.io/library/postgres:14-alpine
+    restart: always
+    networks:
+      - analytics_internal
+    environment:
+      - POSTGRES_USER=analytics
+      - POSTGRES_PASSWORD=${ANALYTICS_DB_PASSWORD}
+      - POSTGRES_DB=analytics
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics -d analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ${CONFIG_VOLUMES}/analytics/postgres:/var/lib/postgresql/data
+
   mongo_botomir:
     image: mongo:5.0
     profiles:
@@ -490,7 +507,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests,analytics
       - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -784,6 +801,26 @@ services:
       - lab_net
     env_file: .importer.env
 
+  analytics:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    networks:
+      - ingress
+      - egress
+      - analytics_internal
+    environment:
+      DATABASE_URL: postgresql://analytics:${ANALYTICS_DB_PASSWORD}@analytics_db:5432/analytics
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${ANALYTICS_APP_SECRET}
+    depends_on:
+      analytics_db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3000/api/heartbeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   ######################################################
   #     External Services
   ######################################################
@@ -1046,6 +1083,8 @@ networks:
   immich_internal:
     internal: true
   inventory_internal:
+    internal: true
+  analytics_internal:
     internal: true
   gitea_internal:
     internal: true

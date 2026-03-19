@@ -899,7 +899,9 @@ services:
       - DB_PASSWORD=${DIVETEC_DB_PASSWORD}
       - AUTH_TRUST_HOST=true
       - NEXT_PUBLIC_APP_URL=https://dive-tec.ca
+      - BETTER_AUTH_URL=https://dive-tec.ca
       - UPLOAD_DIR=/uploads
+      - AUTHELIA_ISSUER_URL=https://home.marshallasch.ca/authelia
       - AUTHELIA_CLIENT_ID=${DIVETEC_AUTH_AUTHELIA_CLIENT_ID}
       - AUTHELIA_CLIENT_SECRET=${DIVETEC_AUTH_AUTHELIA_CLIENT_SECRET}
       - GOOGLE_CLIENT_ID=${DIVETEC_AUTH_GOOGLE_CLIENT_ID}

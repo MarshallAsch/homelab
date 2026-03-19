@@ -661,8 +661,14 @@ services:
     networks:
       - plex_internal
       - internal
+      - smtp_internal
     environment:
       - TZ
+      - MailConfig__EmailServer=smtp-relay
+      - MailConfig__Port=587
+      - MailConfig__Username=
+      - MailConfig__Password=
+      - MailConfig__EnableSsl=false
     volumes:
       - ${CONFIG_VOLUMES}/lubelogger/config:/App/config
       - ${CONFIG_VOLUMES}/lubelogger/data:/App/data

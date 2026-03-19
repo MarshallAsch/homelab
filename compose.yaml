@@ -548,6 +548,18 @@ services:
       - ${CONFIG_VOLUMES}/ddclient:/config
     restart: unless-stopped
 
+  smtp-relay:
+    image: boky/postfix
+    networks:
+      - smtp_internal
+      - egress
+    environment:
+      - RELAYHOST=[${SMTP_HOST}]:${SMTP_PORT}
+      - RELAYHOST_USERNAME=${SMTP_USER}
+      - RELAYHOST_PASSWORD=${SMTP_PASS}
+      - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca pigilab.com
+    restart: unless-stopped
+
   diun:
     image: crazymax/diun:latest
     command: serve

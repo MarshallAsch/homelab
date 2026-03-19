@@ -448,6 +448,7 @@ services:
     networks:
       - authelia_internal
       - plex_internal
+      - smtp_internal
     restart: unless-stopped
     depends_on:
       - openldap
@@ -466,11 +467,11 @@ services:
       LDAP_REQUIRE_STARTTLS: "false"
       EMAIL_DOMAIN: "marshallasch.ca"  # email @this.part.here
       NO_HTTPS: "true"
-      SMTP_HOSTNAME: ${SMTP_HOST}
-      SMTP_HOST_PORT: ${SMTP_PORT}
-      SMTP_USERNAME: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASS}
-      SMTP_USE_TLS: "TRUE"
+      SMTP_HOSTNAME: smtp-relay
+      SMTP_HOST_PORT: "587"
+      SMTP_USERNAME: ""
+      SMTP_PASSWORD: ""
+      SMTP_USE_TLS: "FALSE"
       EMAIL_FROM_ADDRESS: "no-reply@marshallasch.ca"  # your email address
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
       USERNAME_FORMAT: "{first_name}{last_name}"

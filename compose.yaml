@@ -645,6 +645,7 @@ services:
       - ingress
       - egress
       - authelia_internal
+      - smtp_internal
     environment:
       - PUID
       - PGID

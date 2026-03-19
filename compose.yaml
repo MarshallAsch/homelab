@@ -796,11 +796,12 @@ services:
     image: solidinvoice/solidinvoice:2.3.16
     networks:
       - ingress
-      - egress
+      - smtp_internal
     environment:
       - PUID
       - PGID
       - TZ
+      - MAILER_DSN=smtp://smtp-relay:587
     volumes:
       - ${CONFIG_VOLUMES}/solidinvoice:/etc/solidinvoice
     restart: unless-stopped

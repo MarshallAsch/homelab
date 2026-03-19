@@ -47,6 +47,21 @@ services:
       - ${CONFIG_VOLUMES}/fills/db:/config
     restart: unless-stopped
 
+  divetec_db:
+    image: linuxserver/mariadb
+    networks:
+      - internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - MYSQL_DATABASE=divetec
+      - MYSQL_USER=divetec
+      - MYSQL_PASSWORD=${DIVETEC_DB_PASSWORD}
+    volumes:
+      - ${CONFIG_VOLUMES}/divetec/db:/config
+    restart: unless-stopped
+
   gitea_db:
     image: docker.io/library/postgres:14-alpine
     restart: always
@@ -508,7 +523,7 @@ services:
       - TZ
       - URL=${DOMAIN}
       - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests,analytics
-      - EXTRA_DOMAINS=inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
+      - EXTRA_DOMAINS=dive-tec.ca,inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - SWAG_AUTORELOAD=true
@@ -756,6 +771,19 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
+  solidinvoice:
+    image: solidinvoice/solidinvoice:2.3.16
+    networks:
+      - ingress
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/solidinvoice:/etc/solidinvoice
+    restart: unless-stopped
+
   ######################################################
   #     Support Services
   ######################################################
@@ -856,6 +884,29 @@ services:
       - AUTH_SECRET=${FILLS_AUTH_SECRET}
     volumes:
       - ${CONFIG_VOLUMES}/fills/app:/config
+
+  dive-tec:
+    image: code.marshallasch.ca/dive-tec/website:latest
+    restart: unless-stopped
+    networks:
+      - ingress
+      - internal
+      - egress
+    environment:
+      - DB_HOST=divetec_db
+      - DB_NAME=divetec
+      - DB_USER=divetec
+      - DB_PASSWORD=${DIVETEC_DB_PASSWORD}
+      - AUTH_TRUST_HOST=true
+      - NEXT_PUBLIC_APP_URL=https://dive-tec.ca
+      - UPLOAD_DIR=/uploads
+      - AUTHELIA_CLIENT_ID=${DIVETEC_AUTH_AUTHELIA_CLIENT_ID}
+      - AUTHELIA_CLIENT_SECRET=${DIVETEC_AUTH_AUTHELIA_CLIENT_SECRET}
+      - GOOGLE_CLIENT_ID=${DIVETEC_AUTH_GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${DIVETEC_AUTH_GOOGLE_CLIENT_SECRET}
+      - AUTH_SECRET=${DIVETEC_AUTH_SECRET}
+    volumes:
+      - ${CONFIG_VOLUMES}/divetec/uploads:/uploads
 
   inventory_backend:
     image: road2ir_inventory_backend:latest

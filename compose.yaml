@@ -892,6 +892,7 @@ services:
       - ingress
       - internal
       - egress
+      - smtp_internal
     environment:
       - DATABASE__HOST=fills_db
       - DATABASE__DATABASE=${FILLS_DB}
@@ -914,6 +915,7 @@ services:
       - ingress
       - internal
       - egress
+      - smtp_internal
     environment:
       - DB_HOST=divetec_db
       - DB_NAME=divetec

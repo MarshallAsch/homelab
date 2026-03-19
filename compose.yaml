@@ -486,12 +486,12 @@ services:
       - plex_internal
       - egress
       - authelia_internal
+      - smtp_internal
     environment:
       TZ: "${TZ}"
-      AUTHELIA_NOTIFIER_SMTP_USERNAME: ${SMTP_USER}
-      AUTHELIA_NOTIFIER_SMTP_ADDRESS: "smtp://${SMTP_HOST}:${SMTP_PORT}"
+      AUTHELIA_NOTIFIER_SMTP_USERNAME: ""
+      AUTHELIA_NOTIFIER_SMTP_ADDRESS: "smtp://smtp-relay:587"
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: '/run/secrets/ldap_admin_password'
-      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: '/run/secrets/smtp_password'
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: '/run/secrets/oidc_hmac'
       AUTHELIA_SESSION_SECRET_FILE: '/run/secrets/session_secret'
       AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: '/run/secrets/reset_secret'
@@ -500,7 +500,6 @@ services:
       - ${CONFIG_VOLUMES}/authelia:/config
     secrets:
       - ldap_admin_password
-      - smtp_password
       - oidc_hmac
       - session_secret
       - reset_secret
@@ -1130,8 +1129,6 @@ services:
 secrets:
   ldap_admin_password:
     environment: "LDAP_ADMIN_PASSWORD"
-  smtp_password:
-    environment: "SMTP_PASS"
   oidc_hmac:
     environment: "AUTHELIA_OIDC_HMAC"
   session_secret:

@@ -1153,6 +1153,8 @@ networks:
     internal: true
   unifi:
     internal: true
+  smtp_internal:
+    internal: true
   egress: {}
   lab_net:
     driver: macvlan

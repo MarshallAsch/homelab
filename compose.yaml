@@ -922,6 +922,7 @@ services:
       - DB_USER=divetec
       - DB_PASSWORD=${DIVETEC_DB_PASSWORD}
       - AUTH_TRUST_HOST=true
+      - RUN_MIGRATION=true
       - NEXT_PUBLIC_APP_URL=https://dive-tec.ca
       - BETTER_AUTH_URL=https://dive-tec.ca
       - UPLOAD_DIR=/uploads

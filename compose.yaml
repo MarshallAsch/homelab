@@ -285,6 +285,7 @@ services:
     user: "${PUID}:${PGID}"
     init: true
     networks:
+      - smtp_internal
       - plex_internal
       - egress
     environment:

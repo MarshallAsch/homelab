@@ -523,7 +523,7 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests,analytics
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests,analytics,food
       - EXTRA_DOMAINS=dive-tec.ca,inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
@@ -636,6 +636,37 @@ services:
       - PUID
       - PGID
       - TZ
+
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:v2.7.1
+    networks:
+      - ingress
+      - authelia_internal
+      - smtp_internal
+    environment:
+      - PUID
+      - PGID
+      - TZ
+      - BASE_URL=https://food.marshallasch.ca
+      - API_DOCS=false
+      - ALLOW_PASSWORD_LOGIN=false
+      - OIDC_AUTH_ENABLED=true
+      - OIDC_SIGNUP_ENABLED=true
+      - OIDC_CONFIGURATION_URL=https://home.marshallasch.ca/authelia/.well-known/openid-configuration
+      - OIDC_CLIENT_ID=food.marshallasch.ca
+      - OIDC_CLIENT_SECRET=${MEALIE_OIDC_CLIENT_SECRET}
+      - OIDC_PROVIDER_NAME=Authelia
+      - OIDC_AUTO_REDIRECT=true
+      - OIDC_REMEMBER_ME=true
+      - OIDC_ADMIN_GROUP=admins
+      - OIDC_USER_GROUP=food
+      - SMTP_HOST=smtp-relay
+      - SMTP_PORT=587
+      - SMTP_AUTH_STRATEGY=NONE
+      - SMTP_FROM_EMAIL=food@marshallasch.ca
+    volumes:
+      - ${CONFIG_VOLUMES}/mealie:/app/data
+    restart: unless-stopped
 
   nextcloud:
     image: linuxserver/nextcloud

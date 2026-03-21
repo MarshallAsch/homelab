@@ -1,0 +1,5 @@
+# Daily database dumps at 3:00 AM
+0 3 * * * /usr/local/bin/backup.sh 2>&1
+
+# Weekly success summary every Sunday at 8:00 AM
+0 8 * * 0 /usr/local/bin/backup.sh --summary 2>&1

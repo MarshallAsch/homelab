@@ -906,6 +906,9 @@ services:
       - AUTH_GOOGLE_CLIENT_ID=${FILLS_GOOGLE_AUTH_CLIENT_ID}
       - AUTH_GOOGLE_CLIENT_SECRET=${FILLS_GOOGLE_AUTH_CLIENT_SECRET}
       - AUTH_SECRET=${FILLS_AUTH_SECRET}
+      - SMTP__HOST=smtp-relay
+      - SMTP__FROM=dive@marshallasch.ca
+      - SMTP__SHOP_EMAIL=dive@marshallasch.ca
     volumes:
       - ${CONFIG_VOLUMES}/fills/app:/config
 

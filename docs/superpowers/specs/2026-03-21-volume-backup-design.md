@@ -93,7 +93,7 @@ RUN apk add --no-cache \
     postgresql14-client \
     curl \
     gzip \
-    mailx
+    msmtp
 COPY backup.sh /usr/local/bin/backup.sh
 COPY crontab /etc/crontabs/root
 RUN chmod +x /usr/local/bin/backup.sh
@@ -130,10 +130,8 @@ The dump script performs these steps:
 
 1. **For each MariaDB instance** (`mariadb`, `inventory_db`, `fills_db`, `divetec_db`, `firefly_db`, `postal_db`):
    ```
-   # For main mariadb (multi-database): use --all-databases with --ignore-database for system DBs
-   mariadb-dump -h mariadb -u backup_ro -p${BACKUP_MARIADB_PASSWORD} --all-databases \
-     --ignore-database=information_schema --ignore-database=performance_schema \
-     --ignore-database=sys | gzip > /backups/dumps/mariadb/$(date +%Y-%m-%d).sql.gz
+   # For main mariadb (multi-database): use --all-databases
+   mariadb-dump -h mariadb -u backup_ro -p${BACKUP_MARIADB_PASSWORD} --all-databases | gzip > /backups/dumps/mariadb/$(date +%Y-%m-%d).sql.gz
 
    # For single-database instances: dump only the specific database
    mariadb-dump -h <host> -u backup_ro -p${BACKUP_MARIADB_PASSWORD} <dbname> | gzip > /backups/dumps/<service>/$(date +%Y-%m-%d).sql.gz
@@ -270,7 +268,7 @@ volumes/backups/dumps/
 
 ## Implementation Notes
 
-- The main `mariadb` service will be dumped with `--all-databases`. System databases (`information_schema`, `performance_schema`) are excluded via `--ignore-database` flags to avoid restore conflicts.
+- The main `mariadb` service will be dumped with `--all-databases`. System schemas are included but are harmless on restore. Single-database instances use the specific database name instead.
 - PostgreSQL dumps use `pg_dump` per database (not `pg_dumpall`). Cluster-level objects (roles, tablespaces) are not backed up — this is acceptable since the only non-default role is `backup_ro` itself, which is recreated by `setup.sh`.
 - The `firefly_db` database name must be read from `.firefly.db.env` during implementation and hardcoded in the backup script.
 - The backup script should include connection retry logic (5 attempts, 30s interval) per database to handle cold starts after host restarts. No `depends_on` is needed since the cron schedule provides a natural delay — databases will be long running before 3:00 AM in normal operation.

@@ -22,7 +22,7 @@ send_email() {
     local subject="$1" body="$2"
     printf "From: %s\nTo: %s\nSubject: %s\n\n%s" \
         "$NOTIFICATION_FROM" "$NOTIFICATION_EMAIL" "$subject" "$body" \
-    | msmtp --host="$SMTP_RELAY_HOST" --port=587 --from="$NOTIFICATION_FROM" "$NOTIFICATION_EMAIL"
+    | msmtp "$NOTIFICATION_EMAIL"
 }
 
 # ── Retry wrapper ───────────────────────────────────

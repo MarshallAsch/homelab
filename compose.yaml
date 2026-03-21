@@ -936,6 +936,8 @@ services:
       - GOOGLE_CLIENT_ID=${DIVETEC_AUTH_GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${DIVETEC_AUTH_GOOGLE_CLIENT_SECRET}
       - AUTH_SECRET=${DIVETEC_AUTH_SECRET}
+      - SMTP_HOST=smtp-relay
+      - SMTP_FROM=dive@marshallasch.ca
     volumes:
       - ${CONFIG_VOLUMES}/divetec/uploads:/uploads
 

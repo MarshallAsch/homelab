@@ -570,6 +570,42 @@ services:
       - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca pigilab.com
     restart: unless-stopped
 
+  backup-manager:
+    build: ${CONFIG_VOLUMES}/backup-manager
+    networks:
+      - backup_internal
+      - smtp_internal
+    volumes:
+      - ${CONFIG_VOLUMES}/backups/dumps:/backups/dumps
+    environment:
+      - TZ
+      - BACKUP_MARIADB_PASSWORD
+      - BACKUP_POSTGRES_PASSWORD
+      - NOTIFICATION_EMAIL
+      - NOTIFICATION_FROM
+      - SMTP_RELAY_HOST
+      - INVENTORY_DB
+      - FILLS_DB
+      - POSTAL_DB
+      - FIREFLY_DB_NAME
+    depends_on:
+      - smtp-relay
+    restart: unless-stopped
+
+  backblaze:
+    image: tessypowder/backblaze-personal-wine:latest
+    networks:
+      - egress
+    volumes:
+      - ${CONFIG_VOLUMES}:/data/volumes:ro
+      - ${CONFIG_VOLUMES}/backups/dumps:/data/dumps:ro
+      - ${CONFIG_VOLUMES}/backblaze:/config
+    environment:
+      - TZ
+    ports:
+      - "5800:5800"
+    restart: unless-stopped
+
   diun:
     image: crazymax/diun:latest
     command: serve

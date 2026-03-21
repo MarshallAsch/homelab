@@ -2,7 +2,7 @@ FROM alpine:3.21
 
 RUN apk add --no-cache \
     mariadb-client \
-    postgresql14-client \
+    postgresql16-client \
     curl \
     gzip \
     msmtp

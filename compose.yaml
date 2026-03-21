@@ -942,7 +942,7 @@ services:
       - ${CONFIG_VOLUMES}/divetec/uploads:/uploads
 
   inventory_backend:
-    image: road2ir_inventory_backend:latest
+    image: code.marshallasch.ca/road2ir/inventory:backend
     pull_policy: never
     networks:
       - inventory_internal
@@ -952,7 +952,7 @@ services:
     restart: unless-stopped
 
   inventory_frontend:
-    image: road2ir_inventory_frontend:latest
+    image: code.marshallasch.ca/road2ir/inventory:frontend
     pull_policy: never
     networks:
       - ingress

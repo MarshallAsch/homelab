@@ -1184,9 +1184,10 @@ networks:
     driver: macvlan
     # enable_ipv6: true
     driver_opts:
-      parent: eno1
+      parent: enp24s0
     ipam:
       driver: default
       config:
         - subnet: "${SUBNET}.0/24"
+          gateway: "${SUBNET}.1"
 

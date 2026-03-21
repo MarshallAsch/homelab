@@ -571,7 +571,7 @@ services:
     restart: unless-stopped
 
   backup-manager:
-    build: ${CONFIG_VOLUMES}/backup-manager
+    build: backup-manager
     networks:
       - backup_internal
       - smtp_internal
@@ -581,9 +581,9 @@ services:
       - TZ
       - BACKUP_MARIADB_PASSWORD
       - BACKUP_POSTGRES_PASSWORD
-      - NOTIFICATION_EMAIL
-      - NOTIFICATION_FROM
-      - SMTP_RELAY_HOST
+      - NOTIFICATION_EMAIL=marshallasch@gmail.com
+      - NOTIFICATION_FROM=backups@marshallasch.ca
+      - SMTP_RELAY_HOST=smtp-relay
       - INVENTORY_DB
       - FILLS_DB
       - POSTAL_DB
@@ -593,17 +593,17 @@ services:
     restart: unless-stopped
 
   backblaze:
-    image: tessypowder/backblaze-personal-wine:latest
+    image: acook/backblaze-personal-wine:latest
     networks:
       - egress
     volumes:
-      - ${CONFIG_VOLUMES}:/data/volumes:ro
-      - ${CONFIG_VOLUMES}/backups/dumps:/data/dumps:ro
+      - ${CONFIG_VOLUMES}:/data/configs:ro
+      - ${MASS_VOLUMES}:/data/mass:ro
       - ${CONFIG_VOLUMES}/backblaze:/config
     environment:
       - TZ
     ports:
-      - "5800:5800"
+      - "127.0.0.1:5800:5800"
     restart: unless-stopped
 
   diun:
@@ -1235,6 +1235,7 @@ volumes:
 ######################################################
 #       NETWORK SETUP
 ######################################################
+
 networks:
   internal:
     internal: true

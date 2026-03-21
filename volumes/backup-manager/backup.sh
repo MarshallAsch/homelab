@@ -154,7 +154,7 @@ send_summary() {
         return
     fi
     local week_ago
-    week_ago=$(date -u -D '%s' -d "$(($(date +%s) - 604800))" '+%Y-%m-%d')
+    week_ago=$(date -u -d "@$(($(date +%s) - 604800))" '+%Y-%m-%d')
     local body
     body=$(awk -v since="$week_ago" '$0 >= "["since {print}' "$LOG_FILE" | tail -200)
     local ok_count fail_count

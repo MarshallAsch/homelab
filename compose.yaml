@@ -943,7 +943,6 @@ services:
 
   inventory_backend:
     image: code.marshallasch.ca/road2ir/inventory:backend
-    pull_policy: never
     networks:
       - inventory_internal
       - ingress
@@ -953,7 +952,6 @@ services:
 
   inventory_frontend:
     image: code.marshallasch.ca/road2ir/inventory:frontend
-    pull_policy: never
     networks:
       - ingress
     restart: unless-stopped

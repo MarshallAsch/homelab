@@ -686,7 +686,7 @@ services:
     image: ghcr.io/mealie-recipes/mealie:v2.7.1
     networks:
       - ingress
-      - authelia_internal
+      - egress
       - smtp_internal
     environment:
       - PUID

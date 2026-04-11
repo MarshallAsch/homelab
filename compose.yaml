@@ -687,7 +687,7 @@ services:
       - TZ
 
   mealie:
-    image: ghcr.io/mealie-recipes/mealie:v2.7.1
+    image: ghcr.io/mealie-recipes/mealie:v3.13.1
     networks:
       - ingress
       - egress
@@ -718,7 +718,7 @@ services:
     restart: unless-stopped
 
   nextcloud:
-    image: linuxserver/nextcloud
+    image: linuxserver/nextcloud:33.0.2
     depends_on:
       - mariadb
     networks:

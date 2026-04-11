@@ -886,6 +886,43 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
+  gitea_runner_daemon:
+    image: docker:dind
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - gitea_runner_internal
+      - egress
+    environment:
+      - TZ
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - gitea-runner-certs:/certs
+      - gitea-runner-data:/var/lib/docker
+
+  gitea_runner:
+    image: gitea/act_runner:latest
+    restart: unless-stopped
+    depends_on:
+      - gitea
+      - gitea_runner_daemon
+    networks:
+      - gitea_internal
+      - gitea_runner_internal
+      - egress
+    environment:
+      - TZ
+      - DOCKER_HOST=tcp://gitea_runner_daemon:2376
+      - DOCKER_TLS_VERIFY=1
+      - DOCKER_CERT_PATH=/certs/client
+      - GITEA_INSTANCE_URL=http://gitea:3000
+      - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_TOKEN}
+      - GITEA_RUNNER_NAME=docker-runner
+      - GITEA_RUNNER_LABELS=ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-24.04:docker://node:20-bookworm
+    volumes:
+      - ${CONFIG_VOLUMES}/gitea/runner:/data
+      - gitea-runner-certs:/certs:ro
+
   solidinvoice:
     image: solidinvoice/solidinvoice:2.3.16
     networks:
@@ -1283,6 +1320,8 @@ secrets:
 
 volumes:
   model-cache:
+  gitea-runner-certs:
+  gitea-runner-data:
 ######################################################
 #       NETWORK SETUP
 ######################################################
@@ -1297,6 +1336,8 @@ networks:
   analytics_internal:
     internal: true
   gitea_internal:
+    internal: true
+  gitea_runner_internal:
     internal: true
   firefly_iii:
     internal: true

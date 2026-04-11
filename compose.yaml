@@ -716,6 +716,9 @@ services:
       - SMTP_PORT=587
       - SMTP_AUTH_STRATEGY=NONE
       - SMTP_FROM_EMAIL=food@marshallasch.ca
+      - OPENAI_BASE_URL=http://ollama:11434/v1
+      - OPENAI_API_KEY=nothing
+      - OPENAI_MODEL=qwen3-vl:8b
     volumes:
       - ${CONFIG_VOLUMES}/mealie:/app/data
     restart: unless-stopped
@@ -900,6 +903,26 @@ services:
   ######################################################
   #     Support Services
   ######################################################
+
+  ollama:
+    image: ollama/ollama
+    networks:
+      lab_net:
+        ipv4_address: ${SUBNET}.209
+      ingress: {}
+      egress: {}
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    volumes:
+       - ${CONFIG_VOLUMES}/ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   collabora:
     image: collabora/code

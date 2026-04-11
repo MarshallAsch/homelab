@@ -536,8 +536,8 @@ services:
       - PGID
       - TZ
       - URL=${DOMAIN}
-      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests,analytics,food
-      - EXTRA_DOMAINS=dive-tec.ca,inventory.road2ir.org,demo.road2ir.org,inventory.pigilab.com
+      - SUBDOMAINS=ombi,files,ha,home,collabora,botomir,cars,tunarr,speedtest,images,firefly,mail,dive,code,requests,analytics,food,duplicati
+      - EXTRA_DOMAINS=dive-tec.ca,inventory.road2ir.org
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
       - SWAG_AUTORELOAD=true

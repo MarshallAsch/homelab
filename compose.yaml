@@ -568,10 +568,10 @@ services:
       - smtp_internal
       - egress
     environment:
-      - RELAYHOST=[${SMTP_HOST}]:${SMTP_PORT}
-      - RELAYHOST_USERNAME=${SMTP_USER}
-      - RELAYHOST_PASSWORD=${SMTP_PASS}
-      - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca pigilab.com
+      - RELAYHOST=${SMTP_SES_HOST}:${SMTP_SES_PORT}
+      - RELAYHOST_USERNAME=${SMTP_SES_USER}
+      - RELAYHOST_PASSWORD=${SMTP_SES_PASS}
+      - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca
     restart: unless-stopped
 
   backup-manager:

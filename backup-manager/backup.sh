@@ -98,7 +98,6 @@ dump_all_mariadb() {
     dump_mariadb "mariadb" "mariadb" "--all-databases" || true
 
     # Single-database instances: dump only the application database
-    dump_mariadb "inventory_db" "inventory_db" "${INVENTORY_DB:-inventory}" || true
     dump_mariadb "fills_db" "fills_db" "${FILLS_DB:-fills}" || true
     dump_mariadb "divetec_db" "divetec_db" "divetec" || true
     dump_mariadb "firefly_db" "firefly_db" "${FIREFLY_DB_NAME:-firefly}" || true
@@ -133,6 +132,7 @@ dump_all_postgres() {
     dump_postgres "gitea_db" "gitea_db" "gitea" || true
     dump_postgres "immich_db" "immich_db" "immich" || true
     dump_postgres "analytics_db" "analytics_db" "analytics" || true
+    dump_postgres "inventory_db" "inventory_db" "${INVENTORY_DB:-inventory}" || true
 }
 
 # ── Retention pruning ───────────────────────────────

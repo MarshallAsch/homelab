@@ -596,19 +596,22 @@ services:
       - smtp-relay
     restart: unless-stopped
 
-  backblaze:
-    image: acook/backblaze-personal-wine:latest
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
     networks:
       - egress
+      - ingress
     volumes:
-      - ${CONFIG_VOLUMES}:/data/configs:ro
-      - ${MASS_VOLUMES}:/data/mass:ro
-      - ${CONFIG_VOLUMES}/backblaze:/config
+      - ${MASS_VOLUMES}/docker_1/backups:/backups
+      - ${CONFIG_VOLUMES}/duplicati:/config
+      - ${CONFIG_VOLUMES}:/source/configs:ro
+      - ./:/source/homelab:ro
+      - ${MASS_VOLUMES}/nextcloud:/source/nextcloud:ro
     environment:
       - TZ
-    ports:
-      - "127.0.0.1:5800:5800"
-    restart: unless-stopped
+      - PUID
+      - PGID
+      - SETTINGS_ENCRYPTION_KEY=${DUPLICATI_KEY}
 
   diun:
     image: crazymax/diun:latest

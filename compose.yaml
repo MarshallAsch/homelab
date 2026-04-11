@@ -1040,9 +1040,7 @@ services:
       - DB_PASSWORD=${DIVETEC_DB_PASSWORD}
       - AUTH_TRUST_HOST=true
       - RUN_MIGRATION=true
-      - NEXT_PUBLIC_APP_URL=https://dive-tec.ca
-      - BETTER_AUTH_URL=https://dive-tec.ca
-      - UPLOAD_DIR=/uploads
+      - UPLOAD_DIR=/app/uploads
       - AUTHELIA_ISSUER_URL=https://home.marshallasch.ca/authelia
       - AUTHELIA_CLIENT_ID=${DIVETEC_AUTH_AUTHELIA_CLIENT_ID}
       - AUTHELIA_CLIENT_SECRET=${DIVETEC_AUTH_AUTHELIA_CLIENT_SECRET}
@@ -1051,22 +1049,38 @@ services:
       - AUTH_SECRET=${DIVETEC_AUTH_SECRET}
       - SMTP_HOST=smtp-relay
       - SMTP_FROM=dive@marshallasch.ca
+      - TRANSLATION_API_URL=http://ollama:11434
+      - TRANSLATION_MODEL=qwen3.5:9b
     volumes:
-      - ${CONFIG_VOLUMES}/divetec/uploads:/uploads
+      - ${CONFIG_VOLUMES}/divetec/uploads:/app/uploads
 
-  inventory_backend:
-    image: code.marshallasch.ca/road2ir/inventory:backend
+  inventory:
+    image: code.marshallasch.ca/road2ir/inventory:latest
     networks:
+      - ingress
       - inventory_internal
-      - ingress
+      - smtp_internal
+      - egress
     volumes:
-      - ${CONFIG_VOLUMES}/road2ir/backend:/config
-    restart: unless-stopped
-
-  inventory_frontend:
-    image: code.marshallasch.ca/road2ir/inventory:frontend
-    networks:
-      - ingress
+      - ${CONFIG_VOLUMES}/inventory/uploads:/uploads
+    environment:
+      - DB_HOST=inventory_db
+      - DB_NAME=inventory
+      - DB_USER=inventory
+      - DB_PASSWORD=${INVENTORY_DB_PASSWORD}
+      - AUTH_TRUST_HOST=true
+      - RUN_MIGRATION=true
+      - NEXT_PUBLIC_APP_URL=https://inventory.road2ir.org
+      - BETTER_AUTH_URL=https://inventory.road2ir.org
+      - UPLOAD_DIR=/uploads
+      - AUTHELIA_ISSUER_URL=https://home.marshallasch.ca/authelia
+      - AUTHELIA_CLIENT_ID=${INVENTORY_AUTH_AUTHELIA_CLIENT_ID}
+      - AUTHELIA_CLIENT_SECRET=${INVENTORY_AUTH_AUTHELIA_CLIENT_SECRET}
+      - AUTH_SECRET=${INVENTORY_AUTH_SECRET}
+      - SMTP_HOST=smtp-relay
+      - SMTP_FROM=inventory@marshallasch.ca
+      - ANALYTICS_SCRIPT_URL=https://analytics.marshallasch.ca/script.js
+      - ANALYTICS_WEBSITE_ID=cea3f374-7b47-4d11-999c-123082313267
     restart: unless-stopped
 
   ######################################################

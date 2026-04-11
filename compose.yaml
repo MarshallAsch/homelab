@@ -418,6 +418,13 @@ services:
       - PLEX_UPDATE_CHANNEL=4
     devices:
       - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     volumes:
       - ${CONFIG_VOLUMES}/plex/config:/config
       - "${MASS_VOLUMES}/plex/extra_data:/config/Library/Application Support/Plex Media Server/Media"
@@ -778,7 +785,7 @@ services:
       disable: false
 
   immich_ml:
-    image: ghcr.io/immich-app/immich-machine-learning:release
+    image: ghcr.io/immich-app/immich-machine-learning:release-cuda
     networks:
       - immich_internal
       - egress
@@ -791,6 +798,13 @@ services:
       - DB_USERNAME=postgres
       - DB_DATABASE_NAME=immich
       - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     restart: unless-stopped
     healthcheck:
       disable: false

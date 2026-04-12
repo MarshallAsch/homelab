@@ -854,6 +854,7 @@ services:
     user: "${PUID}:${PGID}"
     networks:
       gitea_internal: {}
+      gitea_runner: {}
       authelia_internal: {}
       smtp_internal: {}
       lab_net:
@@ -893,15 +894,18 @@ services:
       - gitea
     networks:
       - gitea_internal
+      - gitea_runner
       - egress
     environment:
       - TZ
+      - CONFIG_FILE=/data/config.yaml
       - GITEA_INSTANCE_URL=http://gitea:3000
       - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_TOKEN}
       - GITEA_RUNNER_NAME=docker-runner
       - GITEA_RUNNER_LABELS=ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-24.04:docker://node:20-bookworm
     volumes:
       - ${CONFIG_VOLUMES}/gitea/runner:/data
+      - ./gitea-runner/config.yaml:/data/config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
 
   solidinvoice:
@@ -1330,6 +1334,7 @@ networks:
     internal: true
   backup_internal:
     internal: true
+  gitea_runner: {}
   egress: {}
   lab_net:
     driver: macvlan

@@ -1,0 +1,19 @@
+log:
+  level: info
+
+runner:
+  capacity: 4
+  timeout: 3h
+
+container:
+  # Job containers join this network so they can resolve "gitea" and reach the
+  # runner's built-in cache server.  The name is <compose-project>_<network>.
+  network: homelab_gitea_runner
+
+cache:
+  enabled: true
+  # The hostname job containers use to reach the runner's cache server.
+  # Must be resolvable from the container.network above.
+  host: "gitea_runner"
+  # Fixed port so networking is predictable (default 0 picks a random port).
+  port: 9040

@@ -285,8 +285,8 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/bookshelf:/config
-      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books
-      - ${MASS_VOLUMES}/plex/downloads/completed:/downloads:ro
+      - ${MASS_VOLUMES}/books:/books
+      - ${MASS_VOLUMES}/plex/downloads/completed:/downloads
     restart: unless-stopped
 
   unpackerr:
@@ -847,20 +847,36 @@ services:
     depends_on:
       - firefly_db
 
-  calibre:
-    image: linuxserver/calibre-web:0.6.26
+  calibre-gui:
+    image: linuxserver/calibre:7.24.0
+    profiles:
+      - temp
     networks:
-      - authelia_internal
+      lab_net:
+        ipv4_address: ${SUBNET}.156
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/calibre/config:/config
+      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/calibre-library:ro
+      - ${MASS_VOLUMES}/books:/books
+    restart: unless-stopped
+
+  kavita:
+    image: linuxserver/kavita:v0.8.9.1
+    networks:
+      - smtp_internal
       - ingress
       - egress
     environment:
       - PUID
       - PGID
       - TZ
-      - DOCKER_MODS=linuxserver/mods:universal-calibre
     volumes:
-      - ${CONFIG_VOLUMES}/calibre-web/config:/config
-      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books:ro
+      - ${CONFIG_VOLUMES}/kavita:/config
+      - ${MASS_VOLUMES}/books:/books
     restart: unless-stopped
 
   gitea:

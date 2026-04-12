@@ -75,7 +75,7 @@ These environment variables (and the files for the volumes obviously) should be 
 - **lubelogger** - Vehicle maintenance tracker
 - **immich_server** / **immich_ml** - Photo management (with GPU-accelerated ML)
 - **firefly** / **firefly_cron** / **firefly_import** - Personal finance manager
-- **calibre** - E-book library (web reader)
+- **kavita** - E-book library and reader
 - **gitea** - Self-hosted Git server
 - **gitea_runner** - Gitea Actions CI runner (host Docker socket)
 - **solidinvoice** - Invoicing

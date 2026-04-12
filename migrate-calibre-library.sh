@@ -97,7 +97,7 @@ for author_dir in "$CALIBRE_SRC"/*/; do
 
             # Skip Calibre-specific metadata files
             if echo "$filename" | grep -qE "^($SKIPPED_FILES)$"; then
-                ((SKIPPED++))
+                SKIPPED=$((SKIPPED + 1))
                 continue
             fi
 
@@ -105,7 +105,7 @@ for author_dir in "$CALIBRE_SRC"/*/; do
             ext="${filename##*.}"
             ext_lower=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
             if ! echo "$ext_lower" | grep -qE "^($BOOK_EXTENSIONS|jpg|jpeg|png|webp)$"; then
-                ((SKIPPED++))
+                SKIPPED=$((SKIPPED + 1))
                 echo "  SKIP: $file (unsupported format: $ext)"
                 continue
             fi
@@ -121,7 +121,7 @@ for author_dir in "$CALIBRE_SRC"/*/; do
                 fi
                 echo "  $file -> $dest_dir/$filename"
             fi
-            ((COUNT++))
+            COUNT=$((COUNT + 1))
         done < <(find "$book_dir" -maxdepth 1 -type f -print0)
     done
 done

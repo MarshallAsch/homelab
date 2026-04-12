@@ -285,7 +285,7 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/bookshelf:/config
-      - ${MASS_VOLUMES}/books:/books
+      - ${CONFIG_VOLUMES}/books:/books
       - ${MASS_VOLUMES}/plex/downloads/completed:/downloads
     restart: unless-stopped
 
@@ -861,11 +861,11 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/calibre/config:/config
       - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/calibre-library:ro
-      - ${MASS_VOLUMES}/books:/books
+      - ${CONFIG_VOLUMES}/books:/books
     restart: unless-stopped
 
   kavita:
-    image: linuxserver/kavita:v0.8.9.1
+    image: linuxserver/kavita:0.8.9
     networks:
       - smtp_internal
       - ingress
@@ -876,7 +876,7 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/kavita:/config
-      - ${MASS_VOLUMES}/books:/books
+      - ${CONFIG_VOLUMES}/books:/books
     restart: unless-stopped
 
   gitea:

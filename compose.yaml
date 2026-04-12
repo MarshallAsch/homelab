@@ -286,6 +286,7 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/bookshelf:/config
       - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books
+      - ${MASS_VOLUMES}/plex/downloads/completed:/downloads:ro
     restart: unless-stopped
 
   unpackerr:

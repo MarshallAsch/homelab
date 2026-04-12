@@ -76,7 +76,7 @@ These environment variables (and the files for the volumes obviously) should be 
 - **firefly** / **firefly_cron** / **firefly_import** - Personal finance manager
 - **calibre** - E-book library (web reader)
 - **gitea** - Self-hosted Git server
-- **gitea_runner** / **gitea_runner_daemon** - Gitea Actions CI runner (docker-in-docker)
+- **gitea_runner** - Gitea Actions CI runner (host Docker socket)
 - **solidinvoice** - Invoicing
 
 #### Support

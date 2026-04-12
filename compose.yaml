@@ -6,7 +6,7 @@ services:
   #     DATABASES
   ######################################################
   mariadb:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:11.4.9
     networks:
       - internal
       - backup_internal
@@ -32,7 +32,7 @@ services:
       - ${CONFIG_VOLUMES}/inventory/database:/var/lib/postgresql/data
 
   fills_db:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:11.4.9
     networks:
       - internal
       - backup_internal
@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
 
   divetec_db:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:11.4.9
     networks:
       - internal
       - backup_internal
@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
 
   firefly_db:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:11.4.9
     restart: unless-stopped
     env_file: .firefly.db.env
     environment:
@@ -105,7 +105,7 @@ services:
       - ${CONFIG_VOLUMES}/firefly/db:/var/lib/mysql
 
   postal_db:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:11.4.9
     networks:
       - internal
       - backup_internal
@@ -192,7 +192,7 @@ services:
     restart: unless-stopped
 
   openldap:
-    image: osixia/openldap:latest
+    image: osixia/openldap:1.5.0
     hostname: ldap.marshallasch.ca
     volumes:
       - ${CONFIG_VOLUMES}/ldap/db:/var/lib/ldap
@@ -220,7 +220,7 @@ services:
   #     Media Services
   ######################################################
   sonarr:
-    image: linuxserver/sonarr
+    image: linuxserver/sonarr:4.0.17
     networks:
       - plex_internal
       - egress
@@ -234,7 +234,7 @@ services:
     restart: unless-stopped
 
   radarr:
-    image: linuxserver/radarr
+    image: linuxserver/radarr:6.0.4
     networks:
       - plex_internal
       - egress
@@ -248,7 +248,7 @@ services:
     restart: unless-stopped
 
   tunarr:
-    image: chrisbenincasa/tunarr:latest-vaapi
+    image: chrisbenincasa/tunarr:1.2.11
     networks:
       - plex_internal
       - egress
@@ -261,7 +261,7 @@ services:
       - /dev/dri:/dev/dri
 
   lidarr:
-    image: linuxserver/lidarr
+    image: linuxserver/lidarr:3.1.0
     networks:
       - plex_internal
       - egress
@@ -275,7 +275,7 @@ services:
     restart: unless-stopped
 
   unpackerr:
-    image: golift/unpackerr
+    image: golift/unpackerr:0.15.2
     networks:
       - plex_internal
     user: ${PUID}:${PGID}
@@ -287,7 +287,7 @@ services:
     restart: unless-stopped
 
   seerr:
-    image: ghcr.io/seerr-team/seerr:latest
+    image: ghcr.io/seerr-team/seerr:v3.1.0
     user: "${PUID}:${PGID}"
     init: true
     networks:
@@ -307,7 +307,7 @@ services:
     restart: unless-stopped
 
   bazarr:
-    image: linuxserver/bazarr
+    image: linuxserver/bazarr:1.5.6
     networks:
       - plex_internal
       - egress
@@ -321,7 +321,7 @@ services:
     restart: unless-stopped
 
   prowlarr:
-    image: linuxserver/prowlarr
+    image: linuxserver/prowlarr:2.3.5
     networks:
       - plex_internal
       - egress
@@ -334,7 +334,7 @@ services:
     restart: unless-stopped
 
   tautulli:
-    image: tautulli/tautulli
+    image: tautulli/tautulli:v2.17.0
     networks:
       - plex_internal
       - egress
@@ -348,7 +348,7 @@ services:
     restart: unless-stopped
 
   transmission:
-    image: haugene/transmission-openvpn:latest
+    image: haugene/transmission-openvpn:5.4.1
     networks:
       - plex_internal
       - egress
@@ -376,7 +376,7 @@ services:
     restart: unless-stopped
 
   wrapped:
-    image: aunefyren/wrapperr:latest
+    image: aunefyren/wrapperr:v3.2.10
     networks:
       - plex_internal
       - egress
@@ -434,7 +434,7 @@ services:
     restart: unless-stopped
 
   handbrake:
-    image: jlesage/handbrake
+    image: jlesage/handbrake:v26.03.3
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.154
@@ -458,7 +458,7 @@ services:
   ######################################################
 
   ldap-user-manager:
-    image: wheelybird/luminary:latest
+    image: wheelybird/luminary:v2.1.1
     networks:
       - authelia_internal
       - plex_internal
@@ -521,7 +521,7 @@ services:
     restart: unless-stopped
 
   letsencrypt:
-    image: linuxserver/swag
+    image: linuxserver/swag:5.5.0
     networks:
       plex_internal: {}
       gitea_internal: {}
@@ -550,7 +550,7 @@ services:
     restart: unless-stopped
 
   ddclient:
-    image: lscr.io/linuxserver/ddclient:latest
+    image: lscr.io/linuxserver/ddclient:4.0.0
     networks:
       - egress
     environment:
@@ -563,7 +563,7 @@ services:
     restart: unless-stopped
 
   smtp-relay:
-    image: boky/postfix
+    image: boky/postfix:v5.1.0
     networks:
       - smtp_internal
       - egress
@@ -597,7 +597,7 @@ services:
     restart: unless-stopped
 
   duplicati:
-    image: lscr.io/linuxserver/duplicati:latest
+    image: lscr.io/linuxserver/duplicati:2.2.0
     networks:
       - egress
       - ingress
@@ -614,7 +614,7 @@ services:
       - SETTINGS_ENCRYPTION_KEY=${DUPLICATI_KEY}
 
   diun:
-    image: crazymax/diun:latest
+    image: crazymax/diun:4.31.0
     command: serve
     networks:
       - egress
@@ -635,7 +635,7 @@ services:
   ######################################################
 
   speedtest:
-    image: lscr.io/linuxserver/speedtest-tracker:latest
+    image: lscr.io/linuxserver/speedtest-tracker:1.13.12
     restart: unless-stopped
     networks:
       - ingress
@@ -657,7 +657,7 @@ services:
       - ${CONFIG_VOLUMES}/speedtest:/config
 
   peanut:
-    image: brandawg93/peanut:latest
+    image: brandawg93/peanut:5.22.0
     restart: unless-stopped
     networks:
       internal: {}
@@ -743,7 +743,7 @@ services:
     restart: unless-stopped
 
   lubelogger:
-    image: ghcr.io/hargata/lubelogger:latest
+    image: ghcr.io/hargata/lubelogger:v1.6.3
     user: "${PUID}:${PGID}"
     networks:
       - plex_internal
@@ -766,7 +766,7 @@ services:
     restart: unless-stopped
 
   immich_server:
-    image: ghcr.io/immich-app/immich-server:release
+    image: ghcr.io/immich-app/immich-server:v2.7.4
     networks:
       - immich_internal
       - egress
@@ -791,7 +791,7 @@ services:
       disable: false
 
   immich_ml:
-    image: ghcr.io/immich-app/immich-machine-learning:release-cuda
+    image: ghcr.io/immich-app/immich-machine-learning:v2.7.4-cuda
     networks:
       - immich_internal
       - egress
@@ -816,7 +816,7 @@ services:
       disable: false
 
   firefly:
-    image: fireflyiii/core:latest
+    image: fireflyiii/core:version-6.5.9
     restart: unless-stopped
     volumes:
       - ${CONFIG_VOLUMES}/firefly/upload:/var/www/html/storage/upload
@@ -833,7 +833,7 @@ services:
       - firefly_db
 
   calibre:
-    image: linuxserver/calibre-web
+    image: linuxserver/calibre-web:0.6.26
     networks:
       - authelia_internal
       - ingress
@@ -887,7 +887,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   gitea_runner_daemon:
-    image: docker:dind
+    image: docker:29-dind
     restart: unless-stopped
     privileged: true
     networks:
@@ -895,13 +895,12 @@ services:
       - egress
     environment:
       - TZ
-      - DOCKER_TLS_CERTDIR=/certs
+      - DOCKER_TLS_CERTDIR=
     volumes:
-      - gitea-runner-certs:/certs
       - gitea-runner-data:/var/lib/docker
 
   gitea_runner:
-    image: gitea/act_runner:latest
+    image: gitea/act_runner:0.3.1
     restart: unless-stopped
     depends_on:
       - gitea
@@ -912,16 +911,13 @@ services:
       - egress
     environment:
       - TZ
-      - DOCKER_HOST=tcp://gitea_runner_daemon:2376
-      - DOCKER_TLS_VERIFY=1
-      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_HOST=tcp://gitea_runner_daemon:2375
       - GITEA_INSTANCE_URL=http://gitea:3000
       - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_TOKEN}
       - GITEA_RUNNER_NAME=docker-runner
       - GITEA_RUNNER_LABELS=ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-24.04:docker://node:20-bookworm
     volumes:
       - ${CONFIG_VOLUMES}/gitea/runner:/data
-      - gitea-runner-certs:/certs:ro
 
   solidinvoice:
     image: solidinvoice/solidinvoice:2.3.16
@@ -942,7 +938,7 @@ services:
   ######################################################
 
   ollama:
-    image: ollama/ollama
+    image: ollama/ollama:0.20.5
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.209
@@ -962,7 +958,7 @@ services:
               capabilities: [gpu]
 
   collabora:
-    image: collabora/code
+    image: collabora/code:25.04.9.4.1
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.207
@@ -981,7 +977,7 @@ services:
     # environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
     # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
     #
-    image: alpine
+    image: alpine:3.21
     restart: unless-stopped
     env_file: .firefly.env
     environment:
@@ -996,14 +992,14 @@ services:
       - firefly_iii
 
   firefly_import:
-    image: fireflyiii/data-importer:latest
+    image: fireflyiii/data-importer:version-2.2.3
     networks:
       - firefly_iii
       - lab_net
     env_file: .importer.env
 
   analytics:
-    image: ghcr.io/umami-software/umami:postgresql-latest
+    image: ghcr.io/umami-software/umami:postgresql-v2.20.2
     networks:
       - ingress
       - egress
@@ -1125,7 +1121,7 @@ services:
   ######################################################
 
   pihole:
-    image: pihole/pihole:latest
+    image: pihole/pihole:2026.04.0
     networks:
       internal: {}
       lab_net:
@@ -1155,7 +1151,7 @@ services:
     restart: unless-stopped
 
   unifi:
-    image: linuxserver/unifi-network-application:latest
+    image: linuxserver/unifi-network-application:10.1.89
     mem_limit: 2g
     networks:
       unifi: {}
@@ -1258,7 +1254,7 @@ services:
     restart: unless-stopped
 
   minecraft:
-    image: itzg/minecraft-server:latest
+    image: itzg/minecraft-server:2025.3.0
     profiles:
       - temp
     networks:
@@ -1281,7 +1277,7 @@ services:
     restart: always
 
   homeassistant:
-    image: linuxserver/homeassistant
+    image: linuxserver/homeassistant:2026.4.2
     networks:
       ingress: {}
       lab_net:
@@ -1320,7 +1316,6 @@ secrets:
 
 volumes:
   model-cache:
-  gitea-runner-certs:
   gitea-runner-data:
 ######################################################
 #       NETWORK SETUP

@@ -274,6 +274,20 @@ services:
       - ${MASS_VOLUMES}/plex:/plex
     restart: unless-stopped
 
+  bookshelf:
+    image: ghcr.io/pennydreadful/bookshelf:hardcover-v0.4.20.129
+    networks:
+      - plex_internal
+      - egress
+    environment:
+      - PUID
+      - PGID
+      - TZ
+    volumes:
+      - ${CONFIG_VOLUMES}/bookshelf:/config
+      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/books
+    restart: unless-stopped
+
   unpackerr:
     image: golift/unpackerr:0.15.2
     networks:

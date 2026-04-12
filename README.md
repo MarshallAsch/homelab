@@ -43,6 +43,7 @@ These environment variables (and the files for the volumes obviously) should be 
 - **sonarr** - TV show management
 - **radarr** - Movie management
 - **lidarr** - Music management
+- **bookshelf** - Book and audiobook management (Readarr fork)
 - **bazarr** - Subtitle management
 - **prowlarr** - Indexer management
 - **tautulli** - Plex monitoring and statistics

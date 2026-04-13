@@ -858,7 +858,7 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/calibre/config:/config
-      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/calibre-library:ro
+      - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/calibre-library
       - ${CONFIG_VOLUMES}/books-incoming:/incoming
       - ${CONFIG_VOLUMES}/books:/books
     restart: unless-stopped
@@ -931,7 +931,7 @@ services:
       - GITEA_INSTANCE_URL=http://gitea:3000
       - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_TOKEN}
       - GITEA_RUNNER_NAME=docker-runner
-      - GITEA_RUNNER_LABELS=ubuntu-latest:docker://node:20-bookworm,ubuntu-22.04:docker://node:20-bookworm,ubuntu-24.04:docker://node:20-bookworm
+      - GITEA_RUNNER_LABELS=ubuntu-latest:docker://catthehacker/ubuntu:act-latest,ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04,ubuntu-24.04:docker://catthehacker/ubuntu:act-latest
     volumes:
       - ${CONFIG_VOLUMES}/gitea/runner:/data
       - ./gitea-runner/config.yaml:/data/config.yaml:ro
@@ -1127,6 +1127,8 @@ services:
       - AUTHELIA_ISSUER_URL=https://home.marshallasch.ca/authelia
       - AUTHELIA_CLIENT_ID=${INVENTORY_AUTH_AUTHELIA_CLIENT_ID}
       - AUTHELIA_CLIENT_SECRET=${INVENTORY_AUTH_AUTHELIA_CLIENT_SECRET}
+      - GOOGLE_CLIENT_ID=${INVENTORY_AUTH_GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${INVENTORY_AUTH_GOOGLE_CLIENT_SECRET}
       - AUTH_SECRET=${INVENTORY_AUTH_SECRET}
       - SMTP_HOST=smtp-relay
       - SMTP_FROM=inventory@marshallasch.ca

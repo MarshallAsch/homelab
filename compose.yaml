@@ -285,7 +285,7 @@ services:
       - TZ
     volumes:
       - ${CONFIG_VOLUMES}/bookshelf:/config
-      - ${CONFIG_VOLUMES}/books:/books
+      - ${CONFIG_VOLUMES}/books-incoming:/books
       - ${MASS_VOLUMES}/plex/downloads/completed:/downloads
     restart: unless-stopped
 
@@ -849,8 +849,6 @@ services:
 
   calibre-gui:
     image: linuxserver/calibre:7.24.0
-    profiles:
-      - temp
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.156
@@ -861,15 +859,15 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/calibre/config:/config
       - ${CONFIG_VOLUMES}/calibre/config/Calibre Library:/calibre-library:ro
+      - ${CONFIG_VOLUMES}/books-incoming:/incoming
       - ${CONFIG_VOLUMES}/books:/books
     restart: unless-stopped
 
   kavita:
     image: linuxserver/kavita:0.8.9
     networks:
-      - smtp_internal
+      - authelia_internal
       - ingress
-      - egress
     environment:
       - PUID
       - PGID

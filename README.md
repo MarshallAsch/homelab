@@ -76,6 +76,7 @@ These environment variables (and the files for the volumes obviously) should be 
 - **immich_server** / **immich_ml** - Photo management (with GPU-accelerated ML)
 - **firefly** / **firefly_cron** / **firefly_import** - Personal finance manager
 - **kavita** - E-book library and reader
+- **calibre-gui** - E-book metadata management (Calibre desktop)
 - **gitea** - Self-hosted Git server
 - **gitea_runner** - Gitea Actions CI runner (host Docker socket)
 - **solidinvoice** - Invoicing

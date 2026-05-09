@@ -6,7 +6,7 @@ services:
   #     DATABASES
   ######################################################
   mariadb:
-    image: linuxserver/mariadb:11.4.9
+    image: linuxserver/mariadb:11.4.10
     networks:
       - internal
       - backup_internal
@@ -32,7 +32,7 @@ services:
       - ${CONFIG_VOLUMES}/inventory/database:/var/lib/postgresql/data
 
   fills_db:
-    image: linuxserver/mariadb:11.4.9
+    image: linuxserver/mariadb:11.4.10
     networks:
       - internal
       - backup_internal
@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
 
   divetec_db:
-    image: linuxserver/mariadb:11.4.9
+    image: linuxserver/mariadb:11.4.10
     networks:
       - internal
       - backup_internal
@@ -77,7 +77,7 @@ services:
       - ${CONFIG_VOLUMES}/gitea/postgres:/var/lib/postgresql/data
 
   immich_db:
-    image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.3.0
     networks:
       - immich_internal
       - backup_internal
@@ -93,7 +93,7 @@ services:
     restart: unless-stopped
 
   firefly_db:
-    image: linuxserver/mariadb:11.4.9
+    image: linuxserver/mariadb:11.4.10
     restart: unless-stopped
     env_file: .firefly.db.env
     environment:
@@ -105,7 +105,7 @@ services:
       - ${CONFIG_VOLUMES}/firefly/db:/var/lib/mysql
 
   postal_db:
-    image: linuxserver/mariadb:11.4.9
+    image: linuxserver/mariadb:11.4.10
     networks:
       - internal
       - backup_internal
@@ -177,7 +177,7 @@ services:
     restart: unless-stopped
 
   unifi-db:
-    image: mongo:7.0.11
+    image: mongo:7.0.32
     networks:
       unifi: {}
     environment:
@@ -234,7 +234,7 @@ services:
     restart: unless-stopped
 
   radarr:
-    image: linuxserver/radarr:6.0.4
+    image: linuxserver/radarr:6.1.1
     networks:
       - plex_internal
       - egress
@@ -248,7 +248,7 @@ services:
     restart: unless-stopped
 
   tunarr:
-    image: chrisbenincasa/tunarr:1.2.11
+    image: chrisbenincasa/tunarr:1.2.17
     networks:
       - plex_internal
       - egress
@@ -302,7 +302,7 @@ services:
     restart: unless-stopped
 
   seerr:
-    image: ghcr.io/seerr-team/seerr:v3.1.0
+    image: ghcr.io/seerr-team/seerr:v3.2.0
     user: "${PUID}:${PGID}"
     init: true
     networks:
@@ -349,7 +349,7 @@ services:
     restart: unless-stopped
 
   tautulli:
-    image: tautulli/tautulli:v2.17.0
+    image: tautulli/tautulli:v2.17.1
     networks:
       - plex_internal
       - egress
@@ -402,7 +402,7 @@ services:
     restart: unless-stopped
 
   plexripper:
-    image: plexripper/plexripper:0.31.1
+    image: plexripper/plexripper:0.32.0
     profiles:
       - test
     networks:
@@ -612,7 +612,7 @@ services:
     restart: unless-stopped
 
   duplicati:
-    image: lscr.io/linuxserver/duplicati:2.2.0
+    image: lscr.io/linuxserver/duplicati:2.3.0
     networks:
       - egress
       - ingress
@@ -650,7 +650,7 @@ services:
   ######################################################
 
   speedtest:
-    image: lscr.io/linuxserver/speedtest-tracker:1.13.12
+    image: lscr.io/linuxserver/speedtest-tracker:1.14.0
     restart: unless-stopped
     networks:
       - ingress
@@ -672,7 +672,7 @@ services:
       - ${CONFIG_VOLUMES}/speedtest:/config
 
   peanut:
-    image: brandawg93/peanut:5.22.0
+    image: brandawg93/peanut:6.0.0
     restart: unless-stopped
     networks:
       internal: {}
@@ -683,13 +683,14 @@ services:
     environment:
       - WEB_PORT=8080
       - BASE_PATH=/peanut
+      - AUTH_DISABLED=true
 
   ######################################################
   #     Home Services
   ######################################################
 
   homepage:
-    image: ghcr.io/gethomepage/homepage:v1.5
+    image: ghcr.io/gethomepage/homepage:v1.13.0
     networks:
       - internal
       - plex_internal
@@ -705,7 +706,7 @@ services:
       - TZ
 
   mealie:
-    image: ghcr.io/mealie-recipes/mealie:v3.13.1
+    image: ghcr.io/mealie-recipes/mealie:v3.17.0
     networks:
       - ingress
       - egress
@@ -739,7 +740,7 @@ services:
     restart: unless-stopped
 
   nextcloud:
-    image: linuxserver/nextcloud:33.0.2
+    image: linuxserver/nextcloud:33.0.3
     depends_on:
       - mariadb
     networks:
@@ -758,7 +759,7 @@ services:
     restart: unless-stopped
 
   lubelogger:
-    image: ghcr.io/hargata/lubelogger:v1.6.3
+    image: ghcr.io/hargata/lubelogger:v1.6.4
     user: "${PUID}:${PGID}"
     networks:
       - plex_internal
@@ -781,7 +782,7 @@ services:
     restart: unless-stopped
 
   immich_server:
-    image: ghcr.io/immich-app/immich-server:v2.7.4
+    image: ghcr.io/immich-app/immich-server:v2.7.5
     networks:
       - immich_internal
       - egress
@@ -806,7 +807,7 @@ services:
       disable: false
 
   immich_ml:
-    image: ghcr.io/immich-app/immich-machine-learning:v2.7.4-cuda
+    image: ghcr.io/immich-app/immich-machine-learning:v2.7.5-cuda
     networks:
       - immich_internal
       - egress
@@ -831,7 +832,7 @@ services:
       disable: false
 
   firefly:
-    image: fireflyiii/core:version-6.5.9
+    image: fireflyiii/core:version-6.6.2
     restart: unless-stopped
     volumes:
       - ${CONFIG_VOLUMES}/firefly/upload:/var/www/html/storage/upload
@@ -848,7 +849,7 @@ services:
       - firefly_db
 
   calibre-gui:
-    image: linuxserver/calibre:7.24.0
+    image: linuxserver/calibre:9.8.0
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.156
@@ -864,7 +865,7 @@ services:
     restart: unless-stopped
 
   kavita:
-    image: linuxserver/kavita:0.8.9
+    image: linuxserver/kavita:0.9.0
     networks:
       - authelia_internal
       - ingress
@@ -878,7 +879,7 @@ services:
     restart: unless-stopped
 
   gitea:
-    image: docker.gitea.com/gitea:1.25.3-rootless
+    image: docker.gitea.com/gitea:1.26.1-rootless
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     networks:
@@ -917,7 +918,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   gitea_runner:
-    image: gitea/act_runner:0.3.1
+    image: gitea/act_runner:0.6.1
     restart: unless-stopped
     depends_on:
       - gitea
@@ -956,7 +957,7 @@ services:
   ######################################################
 
   ollama:
-    image: ollama/ollama:0.20.5
+    image: ollama/ollama:0.23.2
     networks:
       lab_net:
         ipv4_address: ${SUBNET}.209
@@ -1010,7 +1011,7 @@ services:
       - firefly_iii
 
   firefly_import:
-    image: fireflyiii/data-importer:version-2.2.3
+    image: fireflyiii/data-importer:version-2.3.2
     networks:
       - firefly_iii
       - lab_net
@@ -1141,7 +1142,7 @@ services:
   ######################################################
 
   pihole:
-    image: pihole/pihole:2026.04.0
+    image: pihole/pihole:2026.04.1
     networks:
       internal: {}
       lab_net:
@@ -1171,7 +1172,7 @@ services:
     restart: unless-stopped
 
   unifi:
-    image: linuxserver/unifi-network-application:10.1.89
+    image: linuxserver/unifi-network-application:10.3.58
     mem_limit: 2g
     networks:
       unifi: {}
@@ -1224,7 +1225,7 @@ services:
     restart: unless-stopped
 
   postal:
-    image: ghcr.io/postalserver/postal:3.3.3
+    image: ghcr.io/postalserver/postal:3.3.6
     networks:
       internal: {}
       lab_net:
@@ -1241,7 +1242,7 @@ services:
     restart: unless-stopped
 
   postal_worker:
-    image: ghcr.io/postalserver/postal:3.3.4
+    image: ghcr.io/postalserver/postal:3.3.6
     networks:
       internal: {}
       egress: {}
@@ -1257,7 +1258,7 @@ services:
     restart: unless-stopped
 
   postal_smtp:
-    image: ghcr.io/postalserver/postal:3.3.4
+    image: ghcr.io/postalserver/postal:3.3.6
     networks:
       internal: {}
       lab_net:
@@ -1274,7 +1275,7 @@ services:
     restart: unless-stopped
 
   minecraft:
-    image: itzg/minecraft-server:2025.3.0
+    image: itzg/minecraft-server:2026.5.0
     profiles:
       - temp
     networks:
@@ -1297,7 +1298,7 @@ services:
     restart: always
 
   homeassistant:
-    image: linuxserver/homeassistant:2026.4.2
+    image: linuxserver/homeassistant:2026.5.1
     networks:
       ingress: {}
       lab_net:

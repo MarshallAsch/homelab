@@ -1017,7 +1017,7 @@ services:
     env_file: .importer.env
 
   analytics:
-    image: ghcr.io/umami-software/umami:postgresql-v2.20.2
+    image: ghcr.io/umami-software/umami:3.1.0
     networks:
       - ingress
       - egress
@@ -1311,18 +1311,6 @@ services:
     ports:
       - 8123:80
     restart: unless-stopped
-
-  printer:
-    image: thyrlian/air-pdf-printer
-    hostname: printer
-    profiles:
-      - temp
-    networks:
-      lab_net:
-        ipv4_address: ${SUBNET}.153
-    volumes:
-      - ${CONFIG_VOLUMES}/printer/pdf:/root/PDF
-      - ${CONFIG_VOLUMES}/printer/cups:/var/spool/cups-pdf
 
 secrets:
   ldap_admin_password:

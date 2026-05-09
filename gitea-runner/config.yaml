@@ -9,6 +9,11 @@ container:
   # Job containers join this network so they can resolve "gitea" and reach the
   # runner's built-in cache server.  The name is <compose-project>_<network>.
   network: homelab_gitea_runner
+  # Auto-mount the host docker socket into job containers so steps that shell
+  # out to `docker` (login/build/push) can reach the daemon.
+  docker_host: automount
+  valid_volumes:
+    - /var/run/docker.sock
 
 cache:
   enabled: true

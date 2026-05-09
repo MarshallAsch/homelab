@@ -931,7 +931,7 @@ services:
       - GITEA_INSTANCE_URL=http://gitea:3000
       - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_TOKEN}
       - GITEA_RUNNER_NAME=docker-runner
-      - GITEA_RUNNER_LABELS=ubuntu-latest:docker://catthehacker/ubuntu:act-latest,ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04,ubuntu-24.04:docker://catthehacker/ubuntu:act-latest
+      - GITEA_RUNNER_LABELS=ubuntu-latest:docker://catthehacker/ubuntu:runner-latest,ubuntu-22.04:docker://catthehacker/ubuntu:runner-22.04,ubuntu-24.04:docker://catthehacker/ubuntu:runner-latest
     volumes:
       - ${CONFIG_VOLUMES}/gitea/runner:/data
       - ./gitea-runner/config.yaml:/data/config.yaml:ro

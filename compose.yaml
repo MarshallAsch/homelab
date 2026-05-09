@@ -586,7 +586,7 @@ services:
       - RELAYHOST=${SMTP_SES_HOST}:${SMTP_SES_PORT}
       - RELAYHOST_USERNAME=${SMTP_SES_USER}
       - RELAYHOST_PASSWORD=${SMTP_SES_PASS}
-      - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca
+      - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca s-sdiving.com s-sdiving.ca
     restart: unless-stopped
 
   backup-manager:
@@ -1103,6 +1103,7 @@ services:
       - SMTP_FROM=dive@marshallasch.ca
       - TRANSLATION_API_URL=http://ollama:11434
       - TRANSLATION_MODEL=qwen3.5:9b
+      - SMTP_TLS_REJECT_UNAUTHORIZED=false
     volumes:
       - ${CONFIG_VOLUMES}/divetec/uploads:/app/uploads
 

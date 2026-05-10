@@ -9,6 +9,7 @@ container:
   # Job containers join this network so they can resolve "gitea" and reach the
   # runner's built-in cache server.  The name is <compose-project>_<network>.
   network: homelab_gitea_runner
+  options: "--group-add 990"
 
 cache:
   enabled: true

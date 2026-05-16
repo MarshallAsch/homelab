@@ -1104,6 +1104,8 @@ services:
       - TRANSLATION_API_URL=http://ollama:11434
       - TRANSLATION_MODEL=qwen3.5:9b
       - SMTP_TLS_REJECT_UNAUTHORIZED=false
+      - CLOUDFLARE_API_TOKEN=${DIVETEC_CLOUDFLARE_API_TOKEN}
+      - CLOUDFLARE_ZONE_ID=${DIVETEC_CLOUDFLARE_ZONE_ID}
     volumes:
       - ${CONFIG_VOLUMES}/divetec/uploads:/app/uploads
 

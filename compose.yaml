@@ -587,6 +587,10 @@ services:
       - RELAYHOST_USERNAME=${SMTP_SES_USER}
       - RELAYHOST_PASSWORD=${SMTP_SES_PASS}
       - ALLOWED_SENDER_DOMAINS=marshallasch.ca road2ir.org dive-tec.ca s-sdiving.com s-sdiving.ca
+      - POSTFIX_always_bcc=audit@audit.marshallasch.ca
+      - POSTFIX_transport_maps=texthash:/etc/postfix/transport
+    volumes:
+      - ./smtp-relay/transport:/etc/postfix/transport:ro
     restart: unless-stopped
 
   backup-manager:
@@ -1264,6 +1268,7 @@ services:
     image: ghcr.io/postalserver/postal:3.3.6
     networks:
       internal: {}
+      smtp_internal: {}
       lab_net:
         ipv4_address: ${SUBNET}.203
     command: postal smtp-server

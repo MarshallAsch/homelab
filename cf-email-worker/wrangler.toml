@@ -1,0 +1,13 @@
+name = "homelab-mail-inbound"
+main = "src/index.js"
+compatibility_date = "2026-06-20"
+
+# Public, non-secret config. The injector endpoint is served by SWAG at
+# mail.<domain>/_inject and proxies to the mail-injector container.
+# Replace example.com with your domain before deploying.
+[vars]
+MAILIN_URL = "https://mail.example.com/_inject"
+
+# MAILIN_SHARED_SECRET is NOT stored here. Set it as a secret:
+#   wrangler secret put MAILIN_SHARED_SECRET
+# and use the same value as MAILIN_SHARED_SECRET in the homelab .env.

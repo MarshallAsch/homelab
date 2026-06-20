@@ -580,6 +580,44 @@ services:
       - ./smtp-relay/transport:/etc/postfix/transport:ro
     restart: unless-stopped
 
+  # Consolidated mail server (inbound MTA + IMAP mailboxes + outbound relay).
+  stalwart:
+    image: stalwartlabs/stalwart:v0.16.9
+    # Run as the stack's user instead of the image default (UID 2000)
+    user: "${PUID}:${PGID}"
+    networks:
+      - smtp_internal
+      - ingress
+      - egress
+      - authelia_internal
+    ports:
+      - 993:993
+      - 587:587
+    environment:
+      - TZ
+      - CLOUDFLARE_DNS_TOKEN
+      - STALWART_PUBLIC_URL=https://mail.${DOMAIN}
+      - LDAP_ADMIN_PASSWORD
+    volumes:
+      - ${CONFIG_VOLUMES}/stalwart:/opt/stalwart
+    restart: unless-stopped
+
+  # HTTP -> SMTP shim. The Cloudflare Email Worker POSTs raw inbound messages to
+  # mail.${DOMAIN}/_inject (via SWAG); this relays them into Stalwart. Only
+  # inbound path into the network (ISP blocks inbound :25).
+  mail-injector:
+    build: mail-injector
+    networks:
+      - smtp_internal
+      - ingress
+    environment:
+      - INJECTOR_SHARED_SECRET=${MAILIN_SHARED_SECRET}
+      - STALWART_HOST=stalwart
+      - STALWART_PORT=25
+    depends_on:
+      - stalwart
+    restart: unless-stopped
+
   backup-manager:
     build: backup-manager
     networks:

@@ -1041,6 +1041,7 @@ services:
       - DATABASE__DATABASE=${FILLS_DB}
       - DATABASE__USERNAME=${FILLS_USER}
       - DATABASE__PASSWORD=${FILLS_PASSWORD}
+      - RUN_MIGRATIONS=true
       - AUTH_TRUST_HOST=true
       - AUTH_URL=https://dive.marshallasch.ca
       - AUTH_AUTHELIA_CLIENT_ID=${FILLS_AUTHELIA_AUTH_CLIENT_ID}
@@ -1055,7 +1056,7 @@ services:
       - ${CONFIG_VOLUMES}/fills/app:/config
 
   dive-tec:
-    image: code.marshallasch.ca/dive-tec/website:latest
+    image: code.marshallasch.ca/dive-tec/website:sha-8f0629e
     restart: unless-stopped
     networks:
       - ingress
@@ -1070,6 +1071,7 @@ services:
       - AUTH_TRUST_HOST=true
       - RUN_MIGRATION=true
       - UPLOAD_DIR=/app/uploads
+      - CATALOG_DATA_DIR=/app/data/catalog
       - AUTHELIA_ISSUER_URL=https://home.marshallasch.ca/authelia
       - AUTHELIA_CLIENT_ID=${DIVETEC_AUTH_AUTHELIA_CLIENT_ID}
       - AUTHELIA_CLIENT_SECRET=${DIVETEC_AUTH_AUTHELIA_CLIENT_SECRET}
@@ -1083,11 +1085,14 @@ services:
       - SMTP_TLS_REJECT_UNAUTHORIZED=false
       - CLOUDFLARE_API_TOKEN=${DIVETEC_CLOUDFLARE_API_TOKEN}
       - CLOUDFLARE_ZONE_ID=${DIVETEC_CLOUDFLARE_ZONE_ID}
+      - EMAIL_LINK_SECRET=${DIVETEC_EMAIL_LINK_SECRET}
     volumes:
       - ${CONFIG_VOLUMES}/divetec/uploads:/app/uploads
+      - ${CONFIG_VOLUMES}/divetec/catalogs:/app/data/catalogs:ro
+      - ${CONFIG_VOLUMES}/divetec/site-import:/app/data/site-import:ro
 
   inventory:
-    image: code.marshallasch.ca/road2ir/inventory:latest
+    image: code.marshallasch.ca/road2ir/inventory:sha-03875d0
     networks:
       - ingress
       - inventory_internal

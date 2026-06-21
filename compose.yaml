@@ -197,6 +197,8 @@ services:
     volumes:
       - ${CONFIG_VOLUMES}/ldap/db:/var/lib/ldap
       - ${CONFIG_VOLUMES}/ldap/conf:/etc/ldap/slapd.d
+      # Custom schemas loaded on first init (already added online to a running dir)
+      - ./openldap/owncloud.schema:/container/service/slapd/assets/config/bootstrap/schema/owncloud.schema:ro
     networks:
       authelia_internal: {}
       lab_net:
@@ -492,7 +494,8 @@ services:
       REMOTE_HTTP_HEADERS_LOGIN: "TRUE"
       USERNAME_FORMAT: "{first_name}{last_name}"
       ENFORCE_SAFE_SYSTEM_NAMES: "FALSE"
-      LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES: "cn:Display Name,quota_files:Storage quota for Nextcloud,quota_images:Storage quota for immich"
+      LDAP_ACCOUNT_ADDITIONAL_OBJECTCLASSES: PostfixBookMailAccount,ownCloud
+      LDAP_ACCOUNT_ADDITIONAL_ATTRIBUTES: "cn:Display Name,mailAlias+:Mailbox addresses::email,ownCloudQuota:Nextcloud quota::text"
       EMAIL_USER_ON_PASSWORD_CHANGE: "TRUE"
       ADMIN_EMAIL: admin@marshallasch.ca
       AUDIT_ENABLED: "TRUE"
@@ -583,8 +586,6 @@ services:
   # Consolidated mail server (inbound MTA + IMAP mailboxes + outbound relay).
   stalwart:
     image: stalwartlabs/stalwart:v0.16.9
-    # Run as the stack's user instead of the image default (UID 2000)
-    user: "${PUID}:${PGID}"
     networks:
       - smtp_internal
       - ingress
@@ -599,7 +600,8 @@ services:
       - STALWART_PUBLIC_URL=https://mail.${DOMAIN}
       - LDAP_ADMIN_PASSWORD
     volumes:
-      - ${CONFIG_VOLUMES}/stalwart:/opt/stalwart
+      - ${CONFIG_VOLUMES}/stalwart/etc:/etc/stalwart
+      - ${CONFIG_VOLUMES}/stalwart/var:/var/lib/stalwart
     restart: unless-stopped
 
   # HTTP -> SMTP shim. The Cloudflare Email Worker POSTs raw inbound messages to
